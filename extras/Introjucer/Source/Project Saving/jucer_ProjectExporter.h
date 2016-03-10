@@ -73,6 +73,8 @@ public:
     virtual bool isCodeBlocksWindows() const    { return false; }
     virtual bool isCodeBlocksLinux() const      { return false; }
     virtual bool isLinuxMakefile() const        { return false; }
+    virtual bool isMakefile() const             { return false; }
+    virtual bool isMinGW32Makefile() const      { return false; }
 
     virtual bool isAndroid() const              { return false; }
     virtual bool isWindows() const              { return false; }
