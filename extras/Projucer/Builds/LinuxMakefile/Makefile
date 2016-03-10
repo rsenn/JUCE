@@ -18,15 +18,9 @@ ifeq ($(CONFIG),Debug)
     TARGET_ARCH := -march=native
   endif
 
-<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Builds/LinuxMakefile/Makefile
   CPPFLAGS := $(DEPFLAGS) -DLINUX=1 -DDEBUG=1 -D_DEBUG=1 -DJUCER_LINUX_MAKE_6D53C8B4=1 -DJUCE_APP_VERSION=4.2.3 -DJUCE_APP_VERSION_HEX=0x40203 -I /usr/include -I /usr/include/freetype2 -I ../../JuceLibraryCode -I ../../../../modules
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -O0 -std=c++11
   CXXFLAGS += $(CFLAGS) -std=c++11
-=======
-  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -D "JUCE_APP_VERSION=4.1.0" -D "JUCE_APP_VERSION_HEX=0x40100" -I /usr/include -I /usr/include/freetype2 -I ../../JuceLibraryCode -I ../../../../modules
-  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -O0 -std=c++14 -Wuninitialized -Wunused-parameter -Wstrict-aliasing -Wshadow -Wsign-compare
-  CXXFLAGS += $(CFLAGS) -std=c++14
->>>>>>> enki fixes:extras/Introjucer/Builds/Linux/Makefile
   LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR) -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -ldl -lfreetype -lpthread -lrt -lcurl 
 
   TARGET := Projucer
@@ -44,15 +38,9 @@ ifeq ($(CONFIG),Release)
     TARGET_ARCH := -march=native
   endif
 
-<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Builds/LinuxMakefile/Makefile
   CPPFLAGS := $(DEPFLAGS) -DLINUX=1 -DNDEBUG=1 -DJUCER_LINUX_MAKE_6D53C8B4=1 -DJUCE_APP_VERSION=4.2.3 -DJUCE_APP_VERSION_HEX=0x40203 -I /usr/include -I /usr/include/freetype2 -I ../../JuceLibraryCode -I ../../../../modules
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -O3 -std=c++11
   CXXFLAGS += $(CFLAGS) -std=c++11
-=======
-  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -D "JUCE_APP_VERSION=4.1.0" -D "JUCE_APP_VERSION_HEX=0x40100" -I /usr/include -I /usr/include/freetype2 -I ../../JuceLibraryCode -I ../../../../modules
-  CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -O2 -std=c++14 -Wuninitialized -Wunused-parameter -Wstrict-aliasing -Wshadow -Wsign-compare
-  CXXFLAGS += $(CFLAGS) -std=c++14
->>>>>>> enki fixes:extras/Introjucer/Builds/Linux/Makefile
   LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR) -fvisibility=hidden -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -ldl -lfreetype -lpthread -lrt -lcurl 
 
   TARGET := Projucer
@@ -120,71 +108,59 @@ OBJECTS := \
 .PHONY: clean
 
 $(OUTDIR)/$(TARGET): $(OBJECTS) $(RESOURCES)
-<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Builds/LinuxMakefile/Makefile
 	@echo Linking Projucer
-=======
-##	@$(ECHO) Linking The Introjucer
->>>>>>> enki fixes:extras/Introjucer/Builds/Linux/Makefile
 	-@mkdir -p $(BINDIR)
 	-@mkdir -p $(LIBDIR)
 	-@mkdir -p $(OUTDIR)
-	$(Q)$(BLDCMD)
+	@$(BLDCMD)
 
 clean:
-<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Builds/LinuxMakefile/Makefile
 	@echo Cleaning Projucer
 	@$(CLEANCMD)
 
 strip:
 	@echo Stripping Projucer
-=======
-##	@$(ECHO) Cleaning The Introjucer
-	$(Q)$(CLEANCMD)
-
-strip:
-##	@$(ECHO) Stripping The Introjucer
->>>>>>> enki fixes:extras/Introjucer/Builds/Linux/Makefile
 	-@strip --strip-unneeded $(OUTDIR)/$(TARGET)
 
 $(OBJDIR)/jucer_AppearanceSettings_788d9889.o: ../../Source/Application/jucer_AppearanceSettings.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_AppearanceSettings.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_AppearanceSettings.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_AutoUpdater_ca658dc2.o: ../../Source/Application/jucer_AutoUpdater.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_AutoUpdater.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_AutoUpdater.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_CommandLine_f35de107.o: ../../Source/Application/jucer_CommandLine.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_CommandLine.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_CommandLine.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_DocumentEditorComponent_695dff1d.o: ../../Source/Application/jucer_DocumentEditorComponent.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_DocumentEditorComponent.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_DocumentEditorComponent.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_GlobalPreferences_b0f1bd3d.o: ../../Source/Application/jucer_GlobalPreferences.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_GlobalPreferences.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_GlobalPreferences.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_Main_f8488f5b.o: ../../Source/Application/jucer_Main.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_Main.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_Main.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_MainWindow_1e163aeb.o: ../../Source/Application/jucer_MainWindow.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_MainWindow.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_MainWindow.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_OpenDocumentManager_4c72d210.o: ../../Source/Application/jucer_OpenDocumentManager.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_OpenDocumentManager.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_OpenDocumentManager.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/projucer_CompileEngineClient_542e6b2d.o: ../../Source/LiveBuildEngine/projucer_CompileEngineClient.cpp
 	-@mkdir -p $(OBJDIR)
@@ -198,136 +174,123 @@ $(OBJDIR)/projucer_CompileEngineServer_a5a32aa5.o: ../../Source/LiveBuildEngine/
 
 $(OBJDIR)/jucer_SourceCodeEditor_461f5487.o: ../../Source/Code\ Editor/jucer_SourceCodeEditor.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_SourceCodeEditor.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_SourceCodeEditor.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ComponentTypeHandler_6bec6262.o: ../../Source/ComponentEditor/components/jucer_ComponentTypeHandler.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ComponentTypeHandler.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_ComponentTypeHandler.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ButtonDocument_56c341cc.o: ../../Source/ComponentEditor/documents/jucer_ButtonDocument.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ButtonDocument.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_ButtonDocument.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ComponentDocument_92868083.o: ../../Source/ComponentEditor/documents/jucer_ComponentDocument.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ComponentDocument.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_ComponentDocument.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ColouredElement_70cbc839.o: ../../Source/ComponentEditor/paintelements/jucer_ColouredElement.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ColouredElement.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_ColouredElement.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_PaintElement_653460.o: ../../Source/ComponentEditor/paintelements/jucer_PaintElement.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_PaintElement.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_PaintElement.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_PaintElementPath_908894a5.o: ../../Source/ComponentEditor/paintelements/jucer_PaintElementPath.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_PaintElementPath.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_PaintElementPath.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ComponentLayoutEditor_aeb44f8d.o: ../../Source/ComponentEditor/ui/jucer_ComponentLayoutEditor.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ComponentLayoutEditor.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_ComponentLayoutEditor.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ComponentOverlayComponent_fd508d63.o: ../../Source/ComponentEditor/ui/jucer_ComponentOverlayComponent.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ComponentOverlayComponent.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_ComponentOverlayComponent.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_EditingPanelBase_6c2ed9ee.o: ../../Source/ComponentEditor/ui/jucer_EditingPanelBase.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_EditingPanelBase.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_EditingPanelBase.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_JucerDocumentEditor_2c581e26.o: ../../Source/ComponentEditor/ui/jucer_JucerDocumentEditor.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_JucerDocumentEditor.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_JucerDocumentEditor.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_PaintRoutineEditor_f6ac0344.o: ../../Source/ComponentEditor/ui/jucer_PaintRoutineEditor.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_PaintRoutineEditor.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_PaintRoutineEditor.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_PaintRoutinePanel_c309a0d7.o: ../../Source/ComponentEditor/ui/jucer_PaintRoutinePanel.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_PaintRoutinePanel.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_PaintRoutinePanel.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ResourceEditorPanel_a558f2e2.o: ../../Source/ComponentEditor/ui/jucer_ResourceEditorPanel.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ResourceEditorPanel.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_ResourceEditorPanel.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_TestComponent_db757dc4.o: ../../Source/ComponentEditor/ui/jucer_TestComponent.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_TestComponent.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_TestComponent.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_BinaryResources_e0f99b46.o: ../../Source/ComponentEditor/jucer_BinaryResources.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_BinaryResources.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_BinaryResources.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ComponentLayout_6ea00129.o: ../../Source/ComponentEditor/jucer_ComponentLayout.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ComponentLayout.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_ComponentLayout.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_GeneratedCode_9ca4ef7e.o: ../../Source/ComponentEditor/jucer_GeneratedCode.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_GeneratedCode.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_GeneratedCode.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_JucerDocument_ff8afcc2.o: ../../Source/ComponentEditor/jucer_JucerDocument.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_JucerDocument.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_JucerDocument.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ObjectTypes_4406f01c.o: ../../Source/ComponentEditor/jucer_ObjectTypes.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ObjectTypes.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_ObjectTypes.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_PaintRoutine_e1e891ee.o: ../../Source/ComponentEditor/jucer_PaintRoutine.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_PaintRoutine.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_PaintRoutine.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Builds/LinuxMakefile/Makefile
-=======
-$(OBJDIR)/jucer_ProjectExporter_eefe2e5b.o: ../../Source/Project\ Saving/jucer_ProjectExporter.cpp
-	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ProjectExporter.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
-$(OBJDIR)/jucer_ResourceFile_6af120d3.o: ../../Source/Project\ Saving/jucer_ResourceFile.cpp
-	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_ResourceFile.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
->>>>>>> enki fixes:extras/Introjucer/Builds/Linux/Makefile
 $(OBJDIR)/jucer_DependencyPathPropertyComponent_4d137229.o: ../../Source/Project/jucer_DependencyPathPropertyComponent.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_DependencyPathPropertyComponent.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_DependencyPathPropertyComponent.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_Module_3f7666a5.o: ../../Source/Project/jucer_Module.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_Module.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_Module.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_Project_c131864a.o: ../../Source/Project/jucer_Project.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_Project.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_Project.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ProjectExporter_eefe2e5b.o: ../../Source/Project\ Saving/jucer_ProjectExporter.cpp
 	-@mkdir -p $(OBJDIR)
@@ -336,56 +299,38 @@ $(OBJDIR)/jucer_ProjectExporter_eefe2e5b.o: ../../Source/Project\ Saving/jucer_P
 
 $(OBJDIR)/jucer_ProjectSaver_38b16c25.o: ../../Source/Project\ Saving/jucer_ProjectSaver.cpp
 	-@mkdir -p $(OBJDIR)
-<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Builds/LinuxMakefile/Makefile
 	@echo "Compiling jucer_ProjectSaver.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-=======
-##	@$(ECHO) "Compiling jucer_ProjectContentComponent.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
->>>>>>> enki fixes:extras/Introjucer/Builds/Linux/Makefile
 
 $(OBJDIR)/jucer_ResourceFile_6af120d3.o: ../../Source/Project\ Saving/jucer_ResourceFile.cpp
 	-@mkdir -p $(OBJDIR)
-<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Builds/LinuxMakefile/Makefile
 	@echo "Compiling jucer_ResourceFile.cpp"
 	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-=======
-##	@$(ECHO) "Compiling jucer_ProjectType.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
->>>>>>> enki fixes:extras/Introjucer/Builds/Linux/Makefile
 
 $(OBJDIR)/jucer_CodeHelpers_c317179c.o: ../../Source/Utility/jucer_CodeHelpers.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_CodeHelpers.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_CodeHelpers.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_FileHelpers_f98ed0ad.o: ../../Source/Utility/jucer_FileHelpers.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_FileHelpers.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_FileHelpers.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_Icons_9db2f51e.o: ../../Source/Utility/jucer_Icons.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_Icons.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_Icons.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Builds/LinuxMakefile/Makefile
-=======
-$(OBJDIR)/jucer_IntrojucerLookAndFeel_d578c909.o: ../../Source/Utility/jucer_IntrojucerLookAndFeel.cpp
-	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_IntrojucerLookAndFeel.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-
->>>>>>> enki fixes:extras/Introjucer/Builds/Linux/Makefile
 $(OBJDIR)/jucer_JucerTreeViewBase_d043309d.o: ../../Source/Utility/jucer_JucerTreeViewBase.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_JucerTreeViewBase.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_JucerTreeViewBase.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_MiscUtilities_25b68c82.o: ../../Source/Utility/jucer_MiscUtilities.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_MiscUtilities.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_MiscUtilities.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_ProjucerLookAndFeel_d6c6b28a.o: ../../Source/Utility/jucer_ProjucerLookAndFeel.cpp
 	-@mkdir -p $(OBJDIR)
@@ -394,62 +339,62 @@ $(OBJDIR)/jucer_ProjucerLookAndFeel_d6c6b28a.o: ../../Source/Utility/jucer_Proju
 
 $(OBJDIR)/jucer_SlidingPanelComponent_9aa7a2ab.o: ../../Source/Utility/jucer_SlidingPanelComponent.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_SlidingPanelComponent.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_SlidingPanelComponent.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_StoredSettings_26078d2c.o: ../../Source/Utility/jucer_StoredSettings.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_StoredSettings.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_StoredSettings.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_NewFileWizard_fac97f47.o: ../../Source/Wizards/jucer_NewFileWizard.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_NewFileWizard.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_NewFileWizard.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/jucer_NewProjectWizardClasses_891f6fa2.o: ../../Source/Wizards/jucer_NewProjectWizardClasses.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling jucer_NewProjectWizardClasses.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling jucer_NewProjectWizardClasses.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/BinaryData_ce4232d4.o: ../../JuceLibraryCode/BinaryData.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling BinaryData.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling BinaryData.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_core_75b14332.o: ../../JuceLibraryCode/juce_core.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling juce_core.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling juce_core.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_cryptography_6de2ebff.o: ../../JuceLibraryCode/juce_cryptography.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling juce_cryptography.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling juce_cryptography.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_data_structures_72d3da2c.o: ../../JuceLibraryCode/juce_data_structures.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling juce_data_structures.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling juce_data_structures.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_events_d2be882c.o: ../../JuceLibraryCode/juce_events.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling juce_events.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling juce_events.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_graphics_9c18891e.o: ../../JuceLibraryCode/juce_graphics.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling juce_graphics.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling juce_graphics.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_gui_basics_8a6da59c.o: ../../JuceLibraryCode/juce_gui_basics.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling juce_gui_basics.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling juce_gui_basics.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_gui_extra_4a026f23.o: ../../JuceLibraryCode/juce_gui_extra.cpp
 	-@mkdir -p $(OBJDIR)
-##	@$(ECHO) "Compiling juce_gui_extra.cpp"
-	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+	@echo "Compiling juce_gui_extra.cpp"
+	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 -include $(OBJECTS:%.o=%.d)
