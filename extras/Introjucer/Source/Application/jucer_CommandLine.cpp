@@ -574,7 +574,7 @@ namespace
 
     //==============================================================================
 
-    static int getProjectExporters (const StringArray& args )
+    static void getProjectExporters (const StringArray& args )
     {
         checkArgumentCount (args, 2);
 
@@ -583,10 +583,42 @@ namespace
         std::cerr << "Project " << proj.project->getFile().getFullPathName() << " exporters:" << std::endl;
 
         for (Project::ExporterIterator exporter (*proj.project); exporter.next(); ) {
-			std::cout << exporter->getName() << std::endl;
+					std::cout << exporter->getName() << std::endl;
         }
+    }
+    //==============================================================================
+
+    static void removeProjectExporter (const StringArray& args )
+    {
+        checkArgumentCount (args, 3);
+
+        String fileName = args[args.size()-1];
+        int remove = 0;
+
+        LoadedProject proj (fileName);
+				String exportName = args[1].unquoted();
+        Project::ExporterIterator exporter (*proj.project);
+				int i;
+
         
-        return 0;
+				for(i = 0; exporter.next(); ++i) {
+				
+					if(exportName == exporter->getName()) {
+						remove++;
+					   break;
+					 }
+
+        }
+
+				if(remove) {
+					//proj.project->exporters.removeChild(exportName);
+					ValueTree parent (exporter->settings.getParent());                                                                                                                               
+				  parent.removeChild (exporter->settings, nullptr);
+
+          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
+
+					proj.save(false);
+				}
     }
 
     //==============================================================================
@@ -614,6 +646,9 @@ namespace
                   << std::endl
                   << " " << appName << " --add-exporter name project_file" << std::endl
                   << "    Adds an exporter and resaves." << std::endl
+                  << std::endl
+                  << " " << appName << " --remove-exporter name project_file" << std::endl
+                  << "    Removes an exporter and resaves." << std::endl
                   << std::endl
                   << " " << appName << " --resave-resources project_file" << std::endl
                   << std::endl
@@ -678,6 +713,7 @@ int performCommandLine (const String& commandLine)
 				if (matchArgument (command, "list-exporter-names"))      { listExporterNames (); return 0; }
 				if (matchArgument (command, "get-exporters"))            { getProjectExporters (args); return 0; }
 				if (matchArgument (command, "add-exporter"))             { addExporterToProject (args); return 0; }
+				if (matchArgument (command, "remove-exporter"))         { removeProjectExporter (args); return 0; }
 
     }
     catch (const CommandLineError& error)
