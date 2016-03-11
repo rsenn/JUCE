@@ -88,7 +88,7 @@ public:
 protected:
     //==============================================================================
     class MakeBuildConfiguration  : public BuildConfiguration
-    {
+  {
     public:
         MakeBuildConfiguration (Project& p, const ValueTree& settings, const ProjectExporter& e)
             : BuildConfiguration (p, settings, e)
@@ -315,21 +315,21 @@ private:
             << newLine;
 
         out << "$(OUTDIR)/$(TARGET): $(OBJECTS) $(RESOURCES)" << newLine
-            << "\t@echo Linking " << projectName << newLine
+            << "\t#@echo Linking " << projectName << newLine
             << "\t-@mkdir -p $(BINDIR)" << newLine
             << "\t-@mkdir -p $(LIBDIR)" << newLine
             << "\t-@mkdir -p $(OUTDIR)" << newLine
-            << "\t@$(BLDCMD)" << newLine
+            << "\t$(BLDCMD)" << newLine
             << newLine;
 
         out << "clean:" << newLine
-            << "\t@echo Cleaning " << projectName << newLine
-            << "\t@$(CLEANCMD)" << newLine
+            << "\t#@echo Cleaning " << projectName << newLine
+            << "\t$(CLEANCMD)" << newLine
             << newLine;
 
         out << "strip:" << newLine
-            << "\t@echo Stripping " << projectName << newLine
-            << "\t-@strip --strip-unneeded $(OUTDIR)/$(TARGET)" << newLine
+            << "\t#@echo Stripping " << projectName << newLine
+            << "\t-strip --strip-unneeded $(OUTDIR)/$(TARGET)" << newLine
             << newLine;
 
         for (int i = 0; i < files.size(); ++i)
@@ -341,9 +341,9 @@ private:
                 out << "$(OBJDIR)/" << escapeSpaces (getObjectFileFor (files.getReference(i)))
                     << ": " << escapeSpaces (files.getReference(i).toUnixStyle()) << newLine
                     << "\t-@mkdir -p $(OBJDIR)" << newLine
-                    << "\t@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
-                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t@$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
-                                                                         : "\t@$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
+                    << "\t#@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
+                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
+                                                                         : "\t$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
                     << newLine << newLine;
             }
         }
