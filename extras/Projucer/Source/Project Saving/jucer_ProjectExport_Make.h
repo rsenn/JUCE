@@ -1,406 +1,406 @@
 /*
-  ==============================================================================
+==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2015 - ROLI Ltd.
+This file is part of the JUCE library.
+Copyright (c) 2015 - ROLI Ltd.
 
-   Permission is granted to use this software under the terms of either:
-   a) the GPL v2 (or any later version)
-   b) the Affero GPL v3
+Permission is granted to use this software under the terms of either:
+a) the GPL v2 (or any later version)
+b) the Affero GPL v3
 
-   Details of these licenses can be found at: www.gnu.org/licenses
+Details of these licenses can be found at: www.gnu.org/licenses
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-   ------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.juce.com for more information.
+To release a closed-source product which uses JUCE, commercial licenses are
+available: visit www.juce.com for more information.
 
-  ==============================================================================
+==============================================================================
 */
 
 class MakefileProjectExporter  : public ProjectExporter
 {
 public:
-    //==============================================================================
-    static const char* getNameLinux()           { return "Linux Makefile"; }
-    static const char* getValueTreeTypeName()   { return "LINUX_MAKE"; }
+//==============================================================================
+static const char* getNameLinux()           { return "Linux Makefile"; }
+static const char* getValueTreeTypeName()   { return "LINUX_MAKE"; }
 
-    Value getExtraPkgConfig()                   { return getSetting (Ids::linuxExtraPkgConfig); }
-    String getExtraPkgConfigString() const      { return getSettingString (Ids::linuxExtraPkgConfig); }
+Value getExtraPkgConfig()                   { return getSetting (Ids::linuxExtraPkgConfig); }
+String getExtraPkgConfigString() const      { return getSettingString (Ids::linuxExtraPkgConfig); }
 
-    static MakefileProjectExporter* createForSettings (Project& project, const ValueTree& settings)
+static MakefileProjectExporter* createForSettings (Project& project, const ValueTree& settings)
+{
+    if (settings.hasType (getValueTreeTypeName()))
+        return new MakefileProjectExporter (project, settings);
+
+    return nullptr;
+}
+
+
+//==============================================================================
+MakefileProjectExporter (Project& p, const ValueTree& t)   : ProjectExporter (p, t)
+{
+    name = getNameLinux();
+
+    if (getTargetLocationString().isEmpty())
+        getTargetLocationValue() = getDefaultBuildsRootFolder() + "LinuxMakefile";
+
+    initialiseDependencyPathValues();
+}
+
+//==============================================================================
+bool canLaunchProject() override                    { return false; }
+bool launchProject() override                       { return false; }
+bool usesMMFiles() const override                   { return false; }
+bool canCopeWithDuplicateFiles() override           { return false; }
+bool supportsUserDefinedConfigurations() const override { return true; }
+
+bool isXcode() const override                       { return false; }
+bool isVisualStudio() const override                { return false; }
+bool isCodeBlocks() const override                  { return false; }
+bool isMakefile() const override                    { return true; }
+bool isAndroidStudio() const override               { return false; }
+bool isAndroidAnt() const override                  { return false; }
+
+bool isAndroid() const override                     { return false; }
+bool isWindows() const override                     { return false; }
+bool isLinux() const override                       { return true; }
+bool isOSX() const override                         { return false; }
+bool isiOS() const override                         { return false; }
+
+bool supportsVST() const override                   { return true; }
+bool supportsVST3() const override                  { return false; }
+bool supportsAAX() const override                   { return false; }
+bool supportsRTAS() const override                  { return false; }
+bool supportsAU()   const override                  { return false; }
+bool supportsAUv3() const override                  { return false; }
+bool supportsStandalone() const override            { return false;  }
+
+Value getCppStandardValue()                         { return getSetting (Ids::cppLanguageStandard); }
+String getCppStandardString() const                 { return settings[Ids::cppLanguageStandard]; }
+
+void createExporterProperties (PropertyListBuilder& properties) override
+{
+    static const char* cppStandardNames[]  = { "C++03",       "C++11",       "C++14",        nullptr };
+    static const char* cppStandardValues[] = { "-std=c++03",  "-std=c++11",  "-std=c++14",   nullptr };
+
+    properties.add (new ChoicePropertyComponent (getCppStandardValue(),
+                                                    "C++ standard to use",
+                                                    StringArray (cppStandardNames),
+                                                    Array<var>  (cppStandardValues)),
+                    "The C++ standard to specify in the makefile");
+
+    properties.add (new TextPropertyComponent (getExtraPkgConfig(), "pkg-config libraries", 8192, false),
+                "Extra pkg-config libraries for you application. Each package should be space separated.");
+}
+
+//==============================================================================
+void create (const OwnedArray<LibraryModule>&) const override
+{
+    Array<RelativePath> files;
+    for (int i = 0; i < getAllGroups().size(); ++i)
+        findAllFilesToCompile (getAllGroups().getReference(i), files);
+
+    MemoryOutputStream mo;
+    writeMakefile (mo, files);
+
+    overwriteFileIfDifferentOrThrow (getTargetFolder().getChildFile ("Makefile"), mo);
+}
+
+//==============================================================================
+void addPlatformSpecificSettingsForProjectType (const ProjectType& type) override
+{
+    if (type.isStaticLibrary())
+        makefileTargetSuffix = ".a";
+
+    else if (type.isAudioPlugin() || type.isDynamicLibrary())
     {
-        if (settings.hasType (getValueTreeTypeName()))
-            return new MakefileProjectExporter (project, settings);
-
-        return nullptr;
+        makefileIsDLL = true;
+        if (type.isDynamicLibrary())
+            makefileTargetSuffix = ".so";
     }
-
-
-    //==============================================================================
-    MakefileProjectExporter (Project& p, const ValueTree& t)   : ProjectExporter (p, t)
-    {
-        name = getNameLinux();
-
-        if (getTargetLocationString().isEmpty())
-            getTargetLocationValue() = getDefaultBuildsRootFolder() + "LinuxMakefile";
-
-        initialiseDependencyPathValues();
-    }
-
-    //==============================================================================
-    bool canLaunchProject() override                    { return false; }
-    bool launchProject() override                       { return false; }
-    bool usesMMFiles() const override                   { return false; }
-    bool canCopeWithDuplicateFiles() override           { return false; }
-    bool supportsUserDefinedConfigurations() const override { return true; }
-
-    bool isXcode() const override                       { return false; }
-    bool isVisualStudio() const override                { return false; }
-    bool isCodeBlocks() const override                  { return false; }
-    bool isMakefile() const override                    { return true; }
-    bool isAndroidStudio() const override               { return false; }
-    bool isAndroidAnt() const override                  { return false; }
-
-    bool isAndroid() const override                     { return false; }
-    bool isWindows() const override                     { return false; }
-    bool isLinux() const override                       { return true; }
-    bool isOSX() const override                         { return false; }
-    bool isiOS() const override                         { return false; }
-
-    bool supportsVST() const override                   { return true; }
-    bool supportsVST3() const override                  { return false; }
-    bool supportsAAX() const override                   { return false; }
-    bool supportsRTAS() const override                  { return false; }
-    bool supportsAU()   const override                  { return false; }
-    bool supportsAUv3() const override                  { return false; }
-    bool supportsStandalone() const override            { return false;  }
-
-    Value getCppStandardValue()                         { return getSetting (Ids::cppLanguageStandard); }
-    String getCppStandardString() const                 { return settings[Ids::cppLanguageStandard]; }
-
-    void createExporterProperties (PropertyListBuilder& properties) override
-    {
-        static const char* cppStandardNames[]  = { "C++03",       "C++11",       "C++14",        nullptr };
-        static const char* cppStandardValues[] = { "-std=c++03",  "-std=c++11",  "-std=c++14",   nullptr };
-
-        properties.add (new ChoicePropertyComponent (getCppStandardValue(),
-                                                     "C++ standard to use",
-                                                     StringArray (cppStandardNames),
-                                                     Array<var>  (cppStandardValues)),
-                        "The C++ standard to specify in the makefile");
-
-        properties.add (new TextPropertyComponent (getExtraPkgConfig(), "pkg-config libraries", 8192, false),
-                   "Extra pkg-config libraries for you application. Each package should be space separated.");
-    }
-
-    //==============================================================================
-    void create (const OwnedArray<LibraryModule>&) const override
-    {
-        Array<RelativePath> files;
-        for (int i = 0; i < getAllGroups().size(); ++i)
-            findAllFilesToCompile (getAllGroups().getReference(i), files);
-
-        MemoryOutputStream mo;
-        writeMakefile (mo, files);
-
-        overwriteFileIfDifferentOrThrow (getTargetFolder().getChildFile ("Makefile"), mo);
-    }
-
-    //==============================================================================
-    void addPlatformSpecificSettingsForProjectType (const ProjectType& type) override
-    {
-        if (type.isStaticLibrary())
-            makefileTargetSuffix = ".a";
-
-        else if (type.isAudioPlugin() || type.isDynamicLibrary())
-        {
-            makefileIsDLL = true;
-            if (type.isDynamicLibrary())
-                makefileTargetSuffix = ".so";
-        }
-    }
+}
 
 protected:
-    //==============================================================================
-    class MakeBuildConfiguration  : public BuildConfiguration
+//==============================================================================
+class MakeBuildConfiguration  : public BuildConfiguration
+{
+public:
+    MakeBuildConfiguration (Project& p, const ValueTree& settings, const ProjectExporter& e)
+        : BuildConfiguration (p, settings, e)
     {
-    public:
-        MakeBuildConfiguration (Project& p, const ValueTree& settings, const ProjectExporter& e)
-            : BuildConfiguration (p, settings, e)
-        {
-        }
-
-        Value getArchitectureType()             { return getValue (Ids::linuxArchitecture); }
-        var getArchitectureTypeVar() const      { return config [Ids::linuxArchitecture]; }
-
-        var getDefaultOptimisationLevel() const override    { return var ((int) (isDebug() ? gccO0 : gccO3)); }
-
-        void createConfigProperties (PropertyListBuilder& props) override
-        {
-            addGCCOptimisationProperty (props);
-
-            static const char* const archNames[] = { "(Default)", "<None>",       "32-bit (-m32)", "64-bit (-m64)", "ARM v6",       "ARM v7" };
-            const var archFlags[]                = { var(),       var (String()), "-m32",         "-m64",           "-march=armv6", "-march=armv7" };
-
-            props.add (new ChoicePropertyComponent (getArchitectureType(), "Architecture",
-                                                    StringArray (archNames, numElementsInArray (archNames)),
-                                                    Array<var> (archFlags, numElementsInArray (archFlags))));
-        }
-    };
-
-    BuildConfiguration::Ptr createBuildConfig (const ValueTree& tree) const override
-    {
-        return new MakeBuildConfiguration (project, tree, *this);
     }
+
+    Value getArchitectureType()             { return getValue (Ids::linuxArchitecture); }
+    var getArchitectureTypeVar() const      { return config [Ids::linuxArchitecture]; }
+
+    var getDefaultOptimisationLevel() const override    { return var ((int) (isDebug() ? gccO0 : gccO3)); }
+
+    void createConfigProperties (PropertyListBuilder& props) override
+    {
+        addGCCOptimisationProperty (props);
+
+        static const char* const archNames[] = { "(Default)", "<None>",       "32-bit (-m32)", "64-bit (-m64)", "ARM v6",       "ARM v7" };
+        const var archFlags[]                = { var(),       var (String()), "-m32",         "-m64",           "-march=armv6", "-march=armv7" };
+
+        props.add (new ChoicePropertyComponent (getArchitectureType(), "Architecture",
+                                                StringArray (archNames, numElementsInArray (archNames)),
+                                                Array<var> (archFlags, numElementsInArray (archFlags))));
+    }
+};
+
+BuildConfiguration::Ptr createBuildConfig (const ValueTree& tree) const override
+{
+    return new MakeBuildConfiguration (project, tree, *this);
+}
 
 private:
-    //==============================================================================
-    void findAllFilesToCompile (const Project::Item& projectItem, Array<RelativePath>& results) const
+//==============================================================================
+void findAllFilesToCompile (const Project::Item& projectItem, Array<RelativePath>& results) const
+{
+    if (projectItem.isGroup())
     {
-        if (projectItem.isGroup())
-        {
-            for (int i = 0; i < projectItem.getNumChildren(); ++i)
-                findAllFilesToCompile (projectItem.getChild(i), results);
-        }
-        else
-        {
-            if (projectItem.shouldBeCompiled())
-                results.add (RelativePath (projectItem.getFile(), getTargetFolder(), RelativePath::buildTargetFolder));
-        }
+        for (int i = 0; i < projectItem.getNumChildren(); ++i)
+            findAllFilesToCompile (projectItem.getChild(i), results);
+    }
+    else
+    {
+        if (projectItem.shouldBeCompiled())
+            results.add (RelativePath (projectItem.getFile(), getTargetFolder(), RelativePath::buildTargetFolder));
+    }
+}
+
+void writeDefineFlags (OutputStream& out, const BuildConfiguration& config) const
+{
+    StringPairArray defines;
+    defines.set ("LINUX", "1");
+
+    if (config.isDebug())
+    {
+        defines.set ("DEBUG", "1");
+        defines.set ("_DEBUG", "1");
+    }
+    else
+    {
+        defines.set ("NDEBUG", "1");
     }
 
-    void writeDefineFlags (OutputStream& out, const BuildConfiguration& config) const
+    out << createGCCPreprocessorFlags (mergePreprocessorDefs (defines, getAllPreprocessorDefs (config)));
+}
+
+void writeHeaderPathFlags (OutputStream& out, const BuildConfiguration& config) const
+{
+    StringArray searchPaths (extraSearchPaths);
+    searchPaths.addArray (config.getHeaderSearchPaths());
+
+    StringArray packages;
+    packages.addTokens (getExtraPkgConfigString(), " ", "\"'");
+    packages.removeEmptyStrings();
+
+    if (linuxPackages.size() > 0 || packages.size() > 0)
     {
-        StringPairArray defines;
-        defines.set ("LINUX", "1");
+        out << " $(shell pkg-config --cflags";
 
-        if (config.isDebug())
-        {
-            defines.set ("DEBUG", "1");
-            defines.set ("_DEBUG", "1");
-        }
-        else
-        {
-            defines.set ("NDEBUG", "1");
-        }
+        for (int i = 0; i < linuxPackages.size(); ++i)
+            out << " " << linuxPackages[i];
 
-        out << createGCCPreprocessorFlags (mergePreprocessorDefs (defines, getAllPreprocessorDefs (config)));
+        for (int i = 0; i < packages.size(); ++i)
+            out << " " << packages[i];
+
+        out << ")";
     }
 
-    void writeHeaderPathFlags (OutputStream& out, const BuildConfiguration& config) const
+    if (linuxLibs.contains("pthread"))
+        out << " -pthread";
+
+    searchPaths = getCleanedStringArray (searchPaths);
+
+    // Replace ~ character with $(HOME) environment variable
+    for (int i = 0; i < searchPaths.size(); ++i)
+        out << " -I" << escapeSpaces (FileHelpers::unixStylePath (replacePreprocessorTokens (config, searchPaths[i]))).replace ("~", "$(HOME)");
+}
+
+void writeCppFlags (OutputStream& out, const BuildConfiguration& config) const
+{
+    out << "  JUCE_CPPFLAGS := $(DEPFLAGS)";
+    writeDefineFlags (out, config);
+    writeHeaderPathFlags (out, config);
+    out << " $(CPPFLAGS)" << newLine;
+}
+
+void writeLinkerFlags (OutputStream& out, const BuildConfiguration& config) const
+{
+    out << "  JUCE_LDFLAGS += $(TARGET_ARCH) -L$(JUCE_BINDIR) -L$(JUCE_LIBDIR)";
+
     {
-        StringArray searchPaths (extraSearchPaths);
-        searchPaths.addArray (config.getHeaderSearchPaths());
-
-        StringArray packages;
-        packages.addTokens (getExtraPkgConfigString(), " ", "\"'");
-        packages.removeEmptyStrings();
-
-        if (linuxPackages.size() > 0 || packages.size() > 0)
-        {
-            out << " $(shell pkg-config --cflags";
-
-            for (int i = 0; i < linuxPackages.size(); ++i)
-                out << " " << linuxPackages[i];
-
-            for (int i = 0; i < packages.size(); ++i)
-                out << " " << packages[i];
-
-            out << ")";
-        }
-
-        if (linuxLibs.contains("pthread"))
-            out << " -pthread";
-
-        searchPaths = getCleanedStringArray (searchPaths);
-
-        // Replace ~ character with $(HOME) environment variable
-        for (int i = 0; i < searchPaths.size(); ++i)
-            out << " -I" << escapeSpaces (FileHelpers::unixStylePath (replacePreprocessorTokens (config, searchPaths[i]))).replace ("~", "$(HOME)");
-    }
-
-    void writeCppFlags (OutputStream& out, const BuildConfiguration& config) const
-    {
-        out << "  JUCE_CPPFLAGS := $(DEPFLAGS)";
-        writeDefineFlags (out, config);
-        writeHeaderPathFlags (out, config);
-        out << " $(CPPFLAGS)" << newLine;
-    }
-
-    void writeLinkerFlags (OutputStream& out, const BuildConfiguration& config) const
-    {
-        out << "  JUCE_LDFLAGS += $(TARGET_ARCH) -L$(JUCE_BINDIR) -L$(JUCE_LIBDIR)";
-
-        {
-            StringArray flags (makefileExtraLinkerFlags);
-
-            if (makefileIsDLL)
-                flags.add ("-shared");
-
-            if (! config.isDebug())
-                flags.add ("-fvisibility=hidden");
-
-            if (flags.size() > 0)
-                out << " " << getCleanedStringArray (flags).joinIntoString (" ");
-        }
-
-        out << config.getGCCLibraryPathFlags();
-
-        StringArray packages;
-        packages.addTokens (getExtraPkgConfigString(), " ", "\"'");
-        packages.removeEmptyStrings();
-
-        if (linuxPackages.size() > 0  || packages.size() > 0)
-        {
-            out << " $(shell pkg-config --libs";
-
-            for (int i = 0; i < linuxPackages.size(); ++i)
-                out << " " << linuxPackages[i];
-
-            for (int i = 0; i < packages.size(); ++i)
-                out << " " << packages[i];
-
-            out << ")";
-        }
-
-        for (int i = 0; i < linuxLibs.size(); ++i)
-            out << " -l" << linuxLibs[i];
-
-        StringArray libraries;
-        libraries.addTokens (getExternalLibrariesString(), ";", "\"'");
-        libraries.removeEmptyStrings();
-
-        if (libraries.size() != 0)
-            out << " -l" << replacePreprocessorTokens (config, libraries.joinIntoString (" -l")).trim();
-
-        out << " " << replacePreprocessorTokens (config, getExtraLinkerFlagsString()).trim()
-            << " $(LDFLAGS)" << newLine;
-    }
-
-    void writeConfig (OutputStream& out, const BuildConfiguration& config) const
-    {
-        const String buildDirName ("build");
-        const String intermediatesDirName (buildDirName + "/intermediate/" + config.getName());
-        String outputDir (buildDirName);
-
-        if (config.getTargetBinaryRelativePathString().isNotEmpty())
-        {
-            RelativePath binaryPath (config.getTargetBinaryRelativePathString(), RelativePath::projectFolder);
-            outputDir = binaryPath.rebased (projectFolder, getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle();
-        }
-
-        out << "ifeq ($(CONFIG)," << escapeSpaces (config.getName()) << ")" << newLine;
-        out << "  JUCE_BINDIR := " << escapeSpaces (buildDirName) << newLine
-            << "  JUCE_LIBDIR := " << escapeSpaces (buildDirName) << newLine
-            << "  JUCE_OBJDIR := " << escapeSpaces (intermediatesDirName) << newLine
-            << "  JUCE_OUTDIR := " << escapeSpaces (outputDir) << newLine
-            << newLine
-            << "  ifeq ($(TARGET_ARCH),)" << newLine
-            << "    TARGET_ARCH := " << getArchFlags (config) << newLine
-            << "  endif"  << newLine
-            << newLine;
-
-        writeCppFlags (out, config);
-
-        out << "  JUCE_CFLAGS += $(JUCE_CPPFLAGS) $(TARGET_ARCH)";
-
-        if (config.isDebug())
-            out << " -g -ggdb";
+        StringArray flags (makefileExtraLinkerFlags);
 
         if (makefileIsDLL)
-            out << " -fPIC";
+            flags.add ("-shared");
 
-        out << " -O" << config.getGCCOptimisationFlag()
-            << (" "  + replacePreprocessorTokens (config, getExtraCompilerFlagsString())).trimEnd()
-            << " $(CFLAGS)" << newLine;
+        if (! config.isDebug())
+            flags.add ("-fvisibility=hidden");
 
-        String cppStandardToUse (getCppStandardString());
-
-        if (cppStandardToUse.isEmpty())
-            cppStandardToUse = "-std=c++11";
-
-        out << "  JUCE_CXXFLAGS += $(JUCE_CFLAGS) "
-            << cppStandardToUse << " $(CXXFLAGS)" << newLine;
-
-        writeLinkerFlags (out, config);
-
-        out << newLine;
-
-        String targetName (replacePreprocessorTokens (config, config.getTargetBinaryNameString()));
-
-        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
-            targetName = getLibbedFilename (targetName);
-        else
-            targetName = targetName.upToLastOccurrenceOf (".", false, false) + makefileTargetSuffix;
-
-        out << "  TARGET := " << escapeSpaces (targetName) << newLine;
-
-        if (projectType.isStaticLibrary())
-            out << "  BLDCMD = $(AR) -rcs $(JUCE_OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
-        else
-            out << "  BLDCMD = $(CXX) -o $(JUCE_OUTDIR)/$(TARGET) $(OBJECTS) $(JUCE_LDFLAGS) $(RESOURCES) $(TARGET_ARCH)" << newLine;
-
-        out << "  CLEANCMD = rm -rf $(JUCE_OUTDIR)/$(TARGET) $(JUCE_OBJDIR)" << newLine
-            << "endif" << newLine
-            << newLine;
+        if (flags.size() > 0)
+            out << " " << getCleanedStringArray (flags).joinIntoString (" ");
     }
 
-    void writeObjects (OutputStream& out, const Array<RelativePath>& files) const
+    out << config.getGCCLibraryPathFlags();
+
+    StringArray packages;
+    packages.addTokens (getExtraPkgConfigString(), " ", "\"'");
+    packages.removeEmptyStrings();
+
+    if (linuxPackages.size() > 0  || packages.size() > 0)
     {
-        out << "OBJECTS := \\" << newLine;
+        out << " $(shell pkg-config --libs";
 
-        for (int i = 0; i < files.size(); ++i)
-            if (shouldFileBeCompiledByDefault (files.getReference(i)))
-                out << "  $(JUCE_OBJDIR)/" << escapeSpaces (getObjectFileFor (files.getReference(i))) << " \\" << newLine;
+        for (int i = 0; i < linuxPackages.size(); ++i)
+            out << " " << linuxPackages[i];
 
-        out << newLine;
+        for (int i = 0; i < packages.size(); ++i)
+            out << " " << packages[i];
+
+        out << ")";
     }
 
-    void writeMakefile (OutputStream& out, const Array<RelativePath>& files) const
+    for (int i = 0; i < linuxLibs.size(); ++i)
+        out << " -l" << linuxLibs[i];
+
+    StringArray libraries;
+    libraries.addTokens (getExternalLibrariesString(), ";", "\"'");
+    libraries.removeEmptyStrings();
+
+    if (libraries.size() != 0)
+        out << " -l" << replacePreprocessorTokens (config, libraries.joinIntoString (" -l")).trim();
+
+    out << " " << replacePreprocessorTokens (config, getExtraLinkerFlagsString()).trim()
+        << " $(LDFLAGS)" << newLine;
+}
+
+void writeConfig (OutputStream& out, const BuildConfiguration& config) const
+{
+    const String buildDirName ("build");
+    const String intermediatesDirName (buildDirName + "/intermediate/" + config.getName());
+    String outputDir (buildDirName);
+
+    if (config.getTargetBinaryRelativePathString().isNotEmpty())
     {
-        out << "# Automatically generated makefile, created by the Projucer" << newLine
-            << "# Don't edit this file! Your changes will be overwritten when you re-save the Projucer project!" << newLine
-            << newLine;
+        RelativePath binaryPath (config.getTargetBinaryRelativePathString(), RelativePath::projectFolder);
+        outputDir = binaryPath.rebased (projectFolder, getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle();
+    }
 
-        out << "# build with \"V=1\" for verbose builds" << newLine
-            << "ifeq ($(V), 1)" << newLine
-            << "V_AT =" << newLine
-            << "else" << newLine
-            << "V_AT = @" << newLine
-            << "endif" << newLine
-            << newLine;
+    out << "ifeq ($(CONFIG)," << escapeSpaces (config.getName()) << ")" << newLine;
+    out << "  JUCE_BINDIR := " << escapeSpaces (buildDirName) << newLine
+        << "  JUCE_LIBDIR := " << escapeSpaces (buildDirName) << newLine
+        << "  JUCE_OBJDIR := " << escapeSpaces (intermediatesDirName) << newLine
+        << "  JUCE_OUTDIR := " << escapeSpaces (outputDir) << newLine
+        << newLine
+        << "  ifeq ($(TARGET_ARCH),)" << newLine
+        << "    TARGET_ARCH := " << getArchFlags (config) << newLine
+        << "  endif"  << newLine
+        << newLine;
 
-        out << "# (this disables dependency generation if multiple architectures are set)" << newLine
-            << "DEPFLAGS := $(if $(word 2, $(TARGET_ARCH)), , -MMD)" << newLine
-            << newLine;
+    writeCppFlags (out, config);
 
-        out << "ifndef STRIP" << newLine
-            << "  STRIP=strip" << newLine
-            << "endif" << newLine
-            << newLine;
+    out << "  JUCE_CFLAGS += $(JUCE_CPPFLAGS) $(TARGET_ARCH)";
 
-        out << "ifndef AR" << newLine
-            << "  AR=ar" << newLine
-            << "endif" << newLine
-            << newLine;
+    if (config.isDebug())
+        out << " -g -ggdb";
 
-        out << "ifndef CONFIG" << newLine
-            << "  CONFIG=" << escapeSpaces (getConfiguration(0)->getName()) << newLine
-            << "endif" << newLine
-            << newLine;
+    if (makefileIsDLL)
+        out << " -fPIC";
 
-        for (ConstConfigIterator config (*this); config.next();)
-            writeConfig (out, *config);
+    out << " -O" << config.getGCCOptimisationFlag()
+        << (" "  + replacePreprocessorTokens (config, getExtraCompilerFlagsString())).trimEnd()
+        << " $(CFLAGS)" << newLine;
 
-        writeObjects (out, files);
+    String cppStandardToUse (getCppStandardString());
 
-        out << ".PHONY: clean" << newLine
-            << newLine;
+    if (cppStandardToUse.isEmpty())
+        cppStandardToUse = "-std=c++11";
+
+    out << "  JUCE_CXXFLAGS += $(JUCE_CFLAGS) "
+        << cppStandardToUse << " $(CXXFLAGS)" << newLine;
+
+    writeLinkerFlags (out, config);
+
+    out << newLine;
+
+    String targetName (replacePreprocessorTokens (config, config.getTargetBinaryNameString()));
+
+    if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
+        targetName = getLibbedFilename (targetName);
+    else
+        targetName = targetName.upToLastOccurrenceOf (".", false, false) + makefileTargetSuffix;
+
+    out << "  TARGET := " << escapeSpaces (targetName) << newLine;
+
+    if (projectType.isStaticLibrary())
+        out << "  BLDCMD = $(AR) -rcs $(JUCE_OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
+    else
+        out << "  BLDCMD = $(CXX) -o $(JUCE_OUTDIR)/$(TARGET) $(OBJECTS) $(JUCE_LDFLAGS) $(RESOURCES) $(TARGET_ARCH)" << newLine;
+
+    out << "  CLEANCMD = rm -rf $(JUCE_OUTDIR)/$(TARGET) $(JUCE_OBJDIR)" << newLine
+        << "endif" << newLine
+        << newLine;
+}
+
+void writeObjects (OutputStream& out, const Array<RelativePath>& files) const
+{
+    out << "OBJECTS := \\" << newLine;
+
+    for (int i = 0; i < files.size(); ++i)
+        if (shouldFileBeCompiledByDefault (files.getReference(i)))
+            out << "  $(JUCE_OBJDIR)/" << escapeSpaces (getObjectFileFor (files.getReference(i))) << " \\" << newLine;
+
+    out << newLine;
+}
+
+void writeMakefile (OutputStream& out, const Array<RelativePath>& files) const
+{
+    out << "# Automatically generated makefile, created by the Projucer" << newLine
+        << "# Don't edit this file! Your changes will be overwritten when you re-save the Projucer project!" << newLine
+        << newLine;
+
+    out << "# build with \"V=1\" for verbose builds" << newLine
+        << "ifeq ($(V), 1)" << newLine
+        << "V_AT =" << newLine
+        << "else" << newLine
+        << "V_AT = @" << newLine
+        << "endif" << newLine
+        << newLine;
+
+    out << "# (this disables dependency generation if multiple architectures are set)" << newLine
+        << "DEPFLAGS := $(if $(word 2, $(TARGET_ARCH)), , -MMD)" << newLine
+        << newLine;
+
+    out << "ifndef STRIP" << newLine
+        << "  STRIP=strip" << newLine
+        << "endif" << newLine
+        << newLine;
+
+    out << "ifndef AR" << newLine
+        << "  AR=ar" << newLine
+        << "endif" << newLine
+        << newLine;
+
+    out << "ifndef CONFIG" << newLine
+        << "  CONFIG=" << escapeSpaces (getConfiguration(0)->getName()) << newLine
+        << "endif" << newLine
+        << newLine;
+
+    for (ConstConfigIterator config (*this); config.next();)
+        writeConfig (out, *config);
+
+    writeObjects (out, files);
+
+    out << ".PHONY: clean" << newLine
+        << newLine;
 
         StringArray packages;
         packages.addTokens (getExtraPkgConfigString(), " ", "\"'");
@@ -416,6 +416,13 @@ private:
             << "\t-@mkdir -p $(JUCE_LIBDIR)" << newLine
             << "\t-@mkdir -p $(JUCE_OUTDIR)" << newLine
             << "\t$(V_AT)$(BLDCMD)" << newLine
+        /*
+        out << "$(OUTDIR)/$(TARGET): $(OBJECTS) $(RESOURCES)" << newLine
+            << "\t#@echo Linking " << projectName << newLine
+            << "\t-@mkdir -p $(BINDIR)" << newLine
+            << "\t-@mkdir -p $(LIBDIR)" << newLine
+            << "\t-@mkdir -p $(OUTDIR)" << newLine
+            << "\t$(BLDCMD)" << newLine */
             << newLine;
 
         if (useLinuxPackages)
@@ -436,6 +443,7 @@ private:
         }
 
         out << "clean:" << newLine
+<<<<<<< HEAD
             << "\t@echo Cleaning " << projectName << newLine
             << "\t$(V_AT)$(CLEANCMD)" << newLine
             << newLine;
@@ -443,6 +451,15 @@ private:
         out << "strip:" << newLine
             << "\t@echo Stripping " << projectName << newLine
             << "\t-@$(STRIP) --strip-unneeded $(JUCE_OUTDIR)/$(TARGET)" << newLine
+=======
+            << "\t#@echo Cleaning " << projectName << newLine
+            << "\t$(CLEANCMD)" << newLine
+            << newLine;
+
+        out << "strip:" << newLine
+            << "\t#@echo Stripping " << projectName << newLine
+            << "\t-strip --strip-unneeded $(OUTDIR)/$(TARGET)" << newLine
+>>>>>>> 54c09fd7a...  no silent make
             << newLine;
 
         for (int i = 0; i < files.size(); ++i)
@@ -453,10 +470,17 @@ private:
 
                 out << "$(JUCE_OBJDIR)/" << escapeSpaces (getObjectFileFor (files.getReference(i)))
                     << ": " << escapeSpaces (files.getReference(i).toUnixStyle()) << newLine
+<<<<<<< HEAD
                     << "\t-@mkdir -p $(JUCE_OBJDIR)" << newLine
                     << "\t@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
                     << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(V_AT)$(CC) $(JUCE_CFLAGS) -o \"$@\" -c \"$<\""
                                                                          : "\t$(V_AT)$(CXX) $(JUCE_CXXFLAGS) -o \"$@\" -c \"$<\"")
+=======
+                    << "\t-@mkdir -p $(OBJDIR)" << newLine
+                    << "\t#@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
+                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
+                                                                         : "\t$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
+>>>>>>> 54c09fd7a...  no silent make
                     << newLine << newLine;
             }
         }
