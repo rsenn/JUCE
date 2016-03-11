@@ -125,22 +125,31 @@ namespace
       }
       return false;
     }
-      
+
+    static ValueTree* getProjectExporter(Project& p, const String& name) {
+      for(Project::ExporterIterator exporter (p); exporter.next(); ) {
+        if(exporter->getName() == name) {
+          return &exporter->settings;
+        }
+      }
+      return nullptr;
+    }
+
     //==============================================================================
 
     static int listExporterNames ()
     {
-      
+
       std::cerr << "Exporter names:" << std::endl;
-      
+
       std::cout
          <<  ProjectExporter::getExporterNames().joinIntoString("\n")
          << std::endl;
-   
-         
+
+
       return 0;
     }
- 
+
     //==============================================================================
     struct LoadedProject
     {
@@ -394,7 +403,7 @@ namespace
                     const int tabPos = line.indexOfChar ('\t');
                     if (tabPos < 0)
                         break;
-                    
+
                     const int spacesPerTab = 4;
                     const int spacesNeeded = spacesPerTab - (tabPos % spacesPerTab);
                     line = line.replaceSection (tabPos, 1, String::repeatedString (" ", spacesNeeded));
@@ -549,25 +558,25 @@ namespace
         int added = 0;
 
         LoadedProject proj (fileName);
-           
+
         for(int i = 1; i < args.size()-1; ++i) {
           String exportName = args[i].unquoted();
-                      
+
           if(!ProjectExporter::getExporterNames().contains(exportName))
             throw CommandLineError ("No such exporter: " +  exportName);
-          
+
           if(projectHasExporter(*proj.project, exportName)) {
             std::cerr << "Already have an exporter: " << exportName << std::endl;
-          } else {        
-            std::cerr << "Adding exporter: "  << exportName << std::endl;             
-            proj.project->addNewExporter(exportName);          
+          } else {
+            std::cerr << "Adding exporter: "  << exportName << std::endl;
+            proj.project->addNewExporter(exportName);
             ++added;
           }
         }
 
         if(added > 0) {
           std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
-          
+
 					proj.save(false);
 				}
     }
@@ -596,24 +605,23 @@ namespace
         int remove = 0;
 
         LoadedProject proj (fileName);
-				String exportName = args[1].unquoted();
-        Project::ExporterIterator exporter (*proj.project);
-				int i;
 
-        
-				for(i = 0; exporter.next(); ++i) {
-				
-					if(exportName == exporter->getName()) {
+        for(int i = 1; i < args.size()-1; ++i) {
+          String exportName = args[i].unquoted();
+
+					ValueTree* settings = getProjectExporter(*proj.project, exportName);
+
+					if(settings) {
+						ValueTree parent (settings->getParent());
+						parent.removeChild (*settings, nullptr);
 						remove++;
-					   break;
-					 }
-
+					} else {
+        std::cerr << "No such exporter: " << exportName  << std::endl;
+					}
         }
 
 				if(remove) {
 					//proj.project->exporters.removeChild(exportName);
-					ValueTree parent (exporter->settings.getParent());                                                                                                                               
-				  parent.removeChild (exporter->settings, nullptr);
 
           std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
 
