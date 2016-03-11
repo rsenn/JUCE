@@ -126,22 +126,31 @@ namespace
       }
       return false;
     }
-      
+
+    static ValueTree* getProjectExporter(Project& p, const String& name) {
+      for(Project::ExporterIterator exporter (p); exporter.next(); ) {
+        if(exporter->getName() == name) {
+          return &exporter->settings;
+        }
+      }
+      return nullptr;
+    }
+
     //==============================================================================
 
     static int listExporterNames ()
     {
-      
+
       std::cerr << "Exporter names:" << std::endl;
-      
+
       std::cout
          <<  ProjectExporter::getExporterNames().joinIntoString("\n")
          << std::endl;
-   
-         
+
+
       return 0;
     }
- 
+
     //==============================================================================
     struct LoadedProject
     {
@@ -404,7 +413,7 @@ namespace
                     const int tabPos = line.indexOfChar ('\t');
                     if (tabPos < 0)
                         break;
-                    
+
                     const int spacesPerTab = 4;
                     const int spacesNeeded = spacesPerTab - (tabPos % spacesPerTab);
                     line = line.replaceSection (tabPos, 1, String::repeatedString (" ", spacesNeeded));
