@@ -447,9 +447,25 @@ private:
 
         out  << newLine;
 
+        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
+            out << "add_library(" << addQuotesIfContainsSpaces(projectName) << (projectType.isStaticLibrary() ? " STATIC" : " SHARED");
+        else
+            out << "add_executable(" << addQuotesIfContainsSpaces(projectName);
+
+        writeSources(out, files);
+        out << ")" << newLine;
+
+        out << newLine;
+
         out << "if(UNIX)" << newLine;
         writeIncludeFind(out, "X11", true, "  ");
         out << "endif(UNIX)" << newLine;
+
+			  out << "include(CheckLibraryExists)" << newLine;
+				out << "check_library_exists(dl dlopen \"\" HAVE_LIBDL)" << newLine;
+				out << "if(HAVE_LIBDL)" << newLine;
+				out << "  link_libraries(dl)" << newLine ;
+				out << "endif()" << newLine;
 
         writeIncludeFind(out, "Freetype", true);
         out  << newLine;
@@ -465,15 +481,6 @@ private:
 
         writeLinkLibraries(out);
 
-        out << newLine;
-
-        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
-            out << "add_library(" << addQuotesIfContainsSpaces(projectName) << (projectType.isStaticLibrary() ? " STATIC" : " SHARED");
-        else
-            out << "add_executable(" << addQuotesIfContainsSpaces(projectName);
-
-        writeSources(out, files);
-        out << ")" << newLine;
     }
 
     String getArchFlags(const BuildConfiguration& config) const
