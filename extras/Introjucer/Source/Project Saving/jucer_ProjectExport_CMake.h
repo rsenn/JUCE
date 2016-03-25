@@ -529,6 +529,19 @@ private:
     }
 
     //==============================================================================
+    static void writeLibraryCheck(OutputStream& out, const String& libName, const String& symbolName) 
+    {
+				String libFlag = "HAVE_LIB" + libName.toUpperCase();
+
+        out << "  check_library_exists(" << libName << " " << symbolName << " \"\" " << libFlag << ")" << newLine;
+        out << "  if(" << libFlag << ")" << newLine;
+        out << "    link_libraries(" << libName << ")" << newLine ;
+        out << "  endif()" << newLine;
+
+        out << newLine;
+		}
+		
+    //==============================================================================
     void writeMakefile(OutputStream& out, const Array<RelativePath>& files) const
     {
         StringPairArray vars;
@@ -611,21 +624,10 @@ private:
         out << newLine;
   
         out << "  include(CheckLibraryExists)" << newLine;
- 
-        out << "  check_library_exists(GL glXSwapBuffers \"\" HAVE_LIBGL)" << newLine;
-        out << "  if(HAVE_LIBGL)" << newLine;
-        out << "    link_libraries(GL)" << newLine ;
-        out << "  endif()" << newLine;
 
-        out << "  check_library_exists(dl dlopen \"\" HAVE_LIBDL)" << newLine;
-        out << "  if(HAVE_LIBDL)" << newLine;
-        out << "    link_libraries(dl)" << newLine ;
-        out << "  endif()" << newLine;
-  
-        out << "  check_library_exists(pthread pthread_create \"\" HAVE_LIBPTHREAD)" << newLine;
-        out << "  if(HAVE_LIBPTHREAD)" << newLine;
-        out << "    link_libraries(pthread)" << newLine ;
-        out << "  endif()" << newLine;
+				writeLibraryCheck(out, "GL", "glXSwapBuffers");
+				writeLibraryCheck(out, "dl", "dlopen");
+			  writeLibraryCheck(out, "pthread", "pthread_create");
   
         out << "endif()" << newLine;
         out << newLine;
