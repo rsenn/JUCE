@@ -187,11 +187,10 @@ private:
         }
     }
 
-    void writeDefineFlags(OutputStream& out, const BuildConfiguration& config) const
+    void writeDefineFlags(OutputStream& out, const BuildConfiguration& config, const StringPairArray& extraDefs) const
     {
-        StringPairArray defines;
-        //defines.set ("__MINGW__", "1");
-
+        StringPairArray defines(extraDefs);
+				
         if (config.isDebug())
         {
             defines.set("DEBUG", "1");
@@ -209,14 +208,16 @@ private:
         }
     }
 
-    void writeHeaderPathFlags(OutputStream& out, const BuildConfiguration& config) const
+    void writeHeaderPathFlags(OutputStream& out, const BuildConfiguration& config, const StringArray& extraIncPaths) const
     {
         StringArray searchPaths(extraSearchPaths);
+
 
         searchPaths.add(RelativePath(project.getGeneratedCodeFolder(),
                                      getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle());
 
         searchPaths.addArray(config.getHeaderSearchPaths());
+				searchPaths.addArray(extraIncPaths);
 
         /*
         searchPaths.insert(0, "${FREETYPE_INCLUDE_DIRS}");
@@ -237,10 +238,10 @@ private:
 
     }
 
-    void writeCppFlags(OutputStream& out, const BuildConfiguration& config) const
+    void writeCppFlags(OutputStream& out, const BuildConfiguration& config, const StringPairArray& extraDefs, const StringArray& extraIncPaths) const
     {
-        writeDefineFlags(out, config);
-        writeHeaderPathFlags(out, config);
+        writeDefineFlags(out, config, extraDefs);
+        writeHeaderPathFlags(out, config, extraIncPaths);
     }
 
     void writeLinkLibraries(OutputStream& out) const
@@ -291,6 +292,25 @@ private:
 
     }
 
+    void writeCompileFlags(OutputStream& out, const BuildConfiguration& config, const StringArray& flags) const
+		{
+        StringArray compileFlags = flags;
+				
+        if(config.isDebug())
+        {
+            compileFlags.add("-g");
+            compileFlags.add("-gdb");
+        }
+
+        compileFlags.add("-O" + config.getGCCOptimisationFlag());
+ 
+        if (compileFlags.size() == 0)
+				  return;
+
+				out  << "set(CMAKE_CXX_FLAGS_"  << config.getName().toUpperCase() <<  " " << getCleanedStringArray(compileFlags).joinIntoString(" ") << ")" << newLine;
+		}
+
+
     void writeLinkerFlags(OutputStream& out, const BuildConfiguration& config) const
     {
         StringArray flags(makefileExtraLinkerFlags);
@@ -316,7 +336,47 @@ private:
         const String buildDirName("build");
         const String intermediatesDirName(buildDirName + "/intermediate/" + config.getName());
         String outputDir(buildDirName);
-        String compileFlags;
+        StringArray compileFlags, extraIncludePaths, extraCompileFlags = StringArray::fromTokens(replacePreprocessorTokens(config, getExtraCompilerFlagsString()), "; ", "\"'"); 
+		    StringPairArray extraDefinitions;
+				String cppStandardToUse = getCppStandardString();
+
+        if(cppStandardToUse.isEmpty())
+            cppStandardToUse = "-std=c++11";
+
+        compileFlags.add(cppStandardToUse);
+
+				//for(auto t : StringArray::fromTokens(replacePreprocessorTokens(config, getExtraCompilerFlagsString()), "; ", "\"'")) {
+					//
+        for (int i = 0; i < extraCompileFlags.size(); ++i)
+				{
+					const String& t = extraCompileFlags[i];
+
+          String arg;
+
+					std::cerr << "extraCompilerFlags arg: " << t << std::endl;
+
+					if(t.startsWith("-")) {
+					  if(t.length() > 2)
+							arg = t.substring(2);
+						else
+						  arg = extraCompileFlags[++i];
+
+						if(t.startsWith("-I")) {
+							RelativePath includePath(arg, RelativePath::projectFolder);
+							extraIncludePaths.add(includePath.toUnixStyle());
+			// BUG:				addToExtraSearchPaths(includePath);
+							continue;
+						}
+						if(t.startsWith("-D")) {
+							extraDefinitions.set(
+								arg.upToFirstOccurrenceOf("=", false, false), 
+								arg.fromFirstOccurrenceOf("=", false, false)
+							);
+							continue;
+						}
+					}
+				  compileFlags.add(t);
+				}
 
 
         out << "# Configuration: " << config.getName() << newLine;
@@ -329,7 +389,7 @@ private:
 
         out << "if(CMAKE_BUILD_TYPE STREQUAL " << config.getName().quoted() << ")" << newLine;
 
-        writeCppFlags(out, config);
+        writeCppFlags(out, config, extraDefinitions, extraIncludePaths);
 
         if (makefileIsDLL)
             out << "  set(BUILD_SHARED_LIBS ON)" << newLine;
@@ -339,29 +399,9 @@ private:
         out << "endif()" << newLine;
         out << newLine;
 
-        if (config.isDebug())
-        {
-            compileFlags += " -g";
-            compileFlags += " -gdb";
-        }
-
-        compileFlags += " -O" + config.getGCCOptimisationFlag();
-        compileFlags += (" " + replacePreprocessorTokens(config, getExtraCompilerFlagsString())).trimEnd();
-
-        String cppStandardToUse(getCppStandardString());
-
-        if (cppStandardToUse.isEmpty())
-            cppStandardToUse = "-std=c++11";
-
-        compileFlags += " " + cppStandardToUse;
-
-        if (!compileFlags.isEmpty())
-            out  << "set(CMAKE_CXX_FLAGS_"  << config.getName().toUpperCase() << " " << addQuotesIfContainsSpaces(compileFlags.trimStart()) << ")" << newLine;
-
-        //
+        writeCompileFlags(out, config, compileFlags);
         writeLinkerFlags(out, config);
 
-        //
         String targetName(replacePreprocessorTokens(config, config.getTargetBinaryNameString()));
 
         if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
@@ -502,6 +542,7 @@ private:
                                                              Ids::vst3Path,
                                                              os)));
     }
+
 
     JUCE_DECLARE_NON_COPYABLE(CMakeProjectExporter)
 };
