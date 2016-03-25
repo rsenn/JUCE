@@ -32,7 +32,7 @@
 #if ! JUCE_DONT_DECLARE_PROJECTINFO
 namespace ProjectInfo
 {
-    const char* const  projectName    = "The Introjucer";
+    const char* const  projectName    = "Introjucer";
     const char* const  versionString  = "4.1.0";
     const int          versionNumber  = 0x40100;
 }

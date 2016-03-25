@@ -14,9 +14,9 @@ BEGIN
     BLOCK "040904E4"
     BEGIN
       VALUE "CompanyName",  "ROLI Ltd.\0"
-      VALUE "FileDescription",  "The Introjucer\0"
+      VALUE "FileDescription",  "Introjucer\0"
       VALUE "FileVersion",  "4.1.0\0"
-      VALUE "ProductName",  "The Introjucer\0"
+      VALUE "ProductName",  "Introjucer\0"
       VALUE "ProductVersion",  "4.1.0\0"
     END
   END
