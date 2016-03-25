@@ -182,8 +182,8 @@ private:
         }
         else
         {
-         //   if (projectItem.shouldBeCompiled())
-                results.add(RelativePath(projectItem.getFile(), getTargetFolder(), RelativePath::buildTargetFolder));
+            //if (projectItem.shouldBeCompiled())
+            results.add(RelativePath(projectItem.getFile(), getTargetFolder(), RelativePath::buildTargetFolder));
         }
     }
 
@@ -191,47 +191,47 @@ private:
     void writeDefineFlags(OutputStream& out, const BuildConfiguration& config,
                           const StringPairArray& extraDefs) const
     {
-      StringPairArray defines(extraDefs);
+        StringPairArray defines(extraDefs);
 
-      if(config.isDebug())
-      {
-        defines.set("DEBUG", "1");
-        defines.set("_DEBUG", "1");
-      }
-      else
-      {
-        defines.set("NDEBUG", "1");
-      }
+        if(config.isDebug())
+        {
+            defines.set("DEBUG", "1");
+            defines.set("_DEBUG", "1");
+        }
+        else
+        {
+            defines.set("NDEBUG", "1");
+        }
 
-      {
-        String defs = createGCCPreprocessorFlags(mergePreprocessorDefs(defines, getAllPreprocessorDefs(config))).trimStart();
+        {
+            String defs = createGCCPreprocessorFlags(mergePreprocessorDefs(defines, getAllPreprocessorDefs(config))).trimStart();
 
-        if(defs.length() > 0)
-          out << "  add_definitions(" << defs << ")" << newLine;
-      }
+            if(defs.length() > 0)
+                out << "  add_definitions(" << defs << ")" << newLine;
+        }
     }
 
     //==============================================================================
     void writeHeaderPathFlags(OutputStream& out, const BuildConfiguration& config,
                               const StringArray& extraIncPaths) const
     {
-      StringArray searchPaths(extraSearchPaths);
+        StringArray searchPaths(extraSearchPaths);
 
-      searchPaths.add(RelativePath(project.getGeneratedCodeFolder(), getTargetFolder(),
-                                   RelativePath::buildTargetFolder).toUnixStyle());
+        searchPaths.add(RelativePath(project.getGeneratedCodeFolder(), getTargetFolder(),
+                                     RelativePath::buildTargetFolder).toUnixStyle());
 
-      searchPaths.addArray(config.getHeaderSearchPaths());
-      searchPaths.addArray(extraIncPaths);
+        searchPaths.addArray(config.getHeaderSearchPaths());
+        searchPaths.addArray(extraIncPaths);
 
-      /*
+        /*
       searchPaths.insert(0, "${FREETYPE_INCLUDE_DIRS}");
       searchPaths.insert(0, "${FREETYPE_INCLUDE_DIR_ft2build}");
-      */
-      searchPaths = getCleanedStringArray(searchPaths);
+         */
+        searchPaths = getCleanedStringArray(searchPaths);
 
-      out << "  include_directories(" << newLine;
-      writePathList(out, config, searchPaths, "  ");
-      out << ")" << newLine;
+        out << "  include_directories(" << newLine;
+        writePathList(out, config, searchPaths, "  ");
+        out << ")" << newLine;
     }
 
     //==============================================================================
@@ -239,48 +239,48 @@ private:
                        const StringArray& list,
                        const String& indent = "") const
     {
-      out << indent;
+        out << indent;
 
-      for(int i = 0; i < list.size(); ++i)
-      {
-        out << "    "
-            << addQuotesIfContainsSpaces(FileHelpers::unixStylePath(replacePreprocessorTokens(config, list[i])))
-            << newLine << indent;
-      }
+        for(int i = 0; i < list.size(); ++i)
+        {
+            out << "    "
+                            << addQuotesIfContainsSpaces(FileHelpers::unixStylePath(replacePreprocessorTokens(config, list[i])))
+                            << newLine << indent;
+        }
     }
 
     //==============================================================================
     void writeCppFlags(OutputStream& out, const BuildConfiguration& config,
 	               StringPairArray& extraDefs, StringArray& extraIncPaths) const
     {
-      writeDefineFlags(out, config, extraDefs);
-      writeHeaderPathFlags(out, config, extraIncPaths);
+        writeDefineFlags(out, config, extraDefs);
+        writeHeaderPathFlags(out, config, extraIncPaths);
     }
 
     //==============================================================================
     void writeLinkLibraries(OutputStream& out) const
     {
-      const StringArray& libs =
-	  isWindows() ? mingwLibs : (isOSX() ? xcodeLibs : linuxLibs);
-      StringArray libraries;
+        const StringArray& libs =
+                        isWindows() ? mingwLibs : (isOSX() ? xcodeLibs : linuxLibs);
+        StringArray libraries;
 
-      for(int i = 0; i < libs.size(); ++i)
-      {
-	String libName = libs[i];
+        for(int i = 0; i < libs.size(); ++i)
+        {
+            String libName = libs[i];
 
-	if(libName.startsWith("-l"))
-	  libName = libName.substring(2);
+            if(libName.startsWith("-l"))
+                libName = libName.substring(2);
 
-	libraries.add(addQuotesIfContainsSpaces(libName));
-      }
+            libraries.add(addQuotesIfContainsSpaces(libName));
+        }
 
-      libraries.addTokens(getExternalLibrariesString(), ";", "\"'");
-      libraries.removeEmptyStrings();
+        libraries.addTokens(getExternalLibrariesString(), ";", "\"'");
+        libraries.removeEmptyStrings();
 
-      if(libraries.size() > 0)
-      {
-	out << "link_libraries(" << libraries.joinIntoString(" ") << ")" << newLine;
-      }
+        if(libraries.size() > 0)
+        {
+            out << "link_libraries(" << libraries.joinIntoString(" ") << ")" << newLine;
+        }
     }
 
     //==============================================================================
@@ -300,28 +300,27 @@ private:
             if (linkDirs.length() > 0)
                 out << "  link_directories(" << linkDirs << ")" << newLine;
         }
-
     }
 
     //==============================================================================
     void setCompileFlags(StringPairArray& vars, const BuildConfiguration& config,
 		         const StringArray& flags) const
     {
-      StringArray compileFlags = flags;
+        StringArray compileFlags = flags;
 
-      if(config.isDebug())
-      {
-	compileFlags.add("-g");
-	compileFlags.add("-ggdb");
-      }
+        if(config.isDebug())
+        {
+            compileFlags.add("-g");
+            compileFlags.add("-ggdb");
+        }
 
-      compileFlags.add("-O" + config.getGCCOptimisationFlag());
+        compileFlags.add("-O" + config.getGCCOptimisationFlag());
 
-      if(compileFlags.size() == 0)
-	return;
+        if(compileFlags.size() == 0)
+            return;
 
-      vars.set("CMAKE_CXX_FLAGS_" + config.getName().toUpperCase(),
-	getCleanedStringArray(compileFlags).joinIntoString(" "));
+        vars.set("CMAKE_CXX_FLAGS_" + config.getName().toUpperCase(),
+                 getCleanedStringArray(compileFlags).joinIntoString(" "));
     }
 
 
@@ -343,63 +342,61 @@ private:
 
             if (linkFlags.length() > 0)
                 vars.set("LINK_FLAGS_" + config.getName().toUpperCase(), linkFlags);
-            //out  << "set(LINK_FLAGS_"  << config.getName().toUpperCase() << " " << linkFlags.quoted() << ")" << newLine;
         }
     }
 
     //==============================================================================
-    void setFlags(StringPairArray& vars, StringPairArray& extraDefs,
-	          StringArray& extraIncPaths) const
+    void setFlags(StringPairArray& vars, StringPairArray& extraDefs, StringArray& extraIncPaths) const
     {
-      for(ConstConfigIterator config(*this); config.next();)
-      {
-        StringArray compileFlags,
-        extraCompileFlags =
-            StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");
-        String cppStandardToUse = getCppStandardString();
-
-        if(cppStandardToUse.isEmpty())
-          cppStandardToUse = "-std=c++11";
-
-        compileFlags.add(cppStandardToUse);
-
-        for(int i = 0; i < extraCompileFlags.size(); ++i)
+        for(ConstConfigIterator config(*this); config.next();)
         {
-          const String& t = extraCompileFlags[i];
+            StringArray compileFlags, extraCompileFlags = 
+								StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");
 
-          String arg;
+            String cppStandardToUse = getCppStandardString();
 
-          //std::cerr << "extraCompilerFlags arg: " << t << std::endl;
+            if(cppStandardToUse.isEmpty())
+                cppStandardToUse = "-std=c++11";
 
-          if(t.startsWith("-"))
-          {
-            if(t.length() > 2)
-              arg = t.substring(2);
-            else
-              arg = extraCompileFlags[++i];
+            compileFlags.add(cppStandardToUse);
 
-            if(t.startsWith("-I"))
+            for(int i = 0; i < extraCompileFlags.size(); ++i)
             {
-              RelativePath includePath(arg, RelativePath::projectFolder);
-              extraIncPaths.add(includePath.toUnixStyle());
-              continue;
-            }
-            if(t.startsWith("-D"))
-            {
-              extraDefs.set(arg.upToFirstOccurrenceOf("=", false, false), arg.fromFirstOccurrenceOf("=", false, false));
-              continue;
-            }
-          }
+                const String& t = extraCompileFlags[i];
 
-          //compileFlags.add(t);
+                String arg;
+
+                //std::cerr << "extraCompilerFlags arg: " << t << std::endl;
+
+                if(t.startsWith("-"))
+                {
+                    if(t.length() > 2)
+                        arg = t.substring(2);
+                    else
+                        arg = extraCompileFlags[++i];
+
+                    if(t.startsWith("-I"))
+                    {
+                        RelativePath includePath(arg, RelativePath::projectFolder);
+                        extraIncPaths.add(includePath.toUnixStyle());
+                        continue;
+                    }
+                    if(t.startsWith("-D"))
+                    {
+                        extraDefs.set(arg.upToFirstOccurrenceOf("=", false, false), arg.fromFirstOccurrenceOf("=", false, false));
+                        continue;
+                    }
+                }
+
+                //compileFlags.add(t);
+            }
+
+            setCompileFlags(vars, *config, compileFlags);
+            setLinkerFlags(vars, *config);
+
+            //std::cerr << "compileFlags arg: " << compileFlags.joinIntoString("|") << std::endl;
+
         }
-
-        setCompileFlags(vars, *config, compileFlags);
-        setLinkerFlags(vars, *config);
-
-        //std::cerr << "compileFlags arg: " << compileFlags.joinIntoString("|") << std::endl;
-
-      }
     }
 
     //==============================================================================
@@ -431,8 +428,6 @@ private:
 
         out << "endif()" << newLine;
         out << newLine;
-
-
 
         String targetFilename(replacePreprocessorTokens(config, config.getTargetBinaryNameString()));
 
@@ -483,175 +478,178 @@ private:
     }
 
     //==============================================================================
-    void writeIncludeFind(OutputStream& out, const String& libraryName, bool required = false, const String& indent = "") const
+    void writeIncludeFind(OutputStream& out, const String& libraryName, bool required = false) const
     {
         String varName = libraryName.toUpperCase();
 
-        out << indent << "include(Find"+libraryName+")" << newLine
-            << indent << "if(" << varName << "_FOUND)" << newLine
-            << indent << "  message(STATUS \"Found " << libraryName << " library version ${" << varName << "_VERSION_STRING}\")" << newLine;
+        out << "  include(Find"+libraryName+")" << newLine
+            << "  if(" << varName << "_FOUND)" << newLine
+            << "    message(STATUS \"Found " << libraryName << " library version ${" << varName << "_VERSION_STRING}\")" << newLine;
 
-        out << indent << "  include_directories(${" << varName << "_INCLUDE_DIRS})" << newLine;
-        out << indent << "  link_libraries(${" << varName << "_LIBRARIES})" << newLine;
+        out << "    include_directories(${" << varName << "_INCLUDE_DIRS})" << newLine;
+        out << "    link_libraries(${" << varName << "_LIBRARIES})" << newLine;
 
         if (required)
         {
-            out << indent << "else()" << newLine
-                << indent << "  message(FATAL_ERROR \"" << libraryName << " library not found!\")" << newLine;
+            out << "  else()" << newLine
+                << "    message(FATAL_ERROR \"" << libraryName << " library not found!\")" << newLine;
         }
         else
         {
-            out << indent << "  add_definitions(-DHAVE_" << varName << "=1)" << newLine;
+            out << "    add_definitions(-DHAVE_" << varName << "=1)" << newLine;
         }
 
-        out << indent << "endif()" << newLine;
+        out << "  endif()" << newLine;
     }
 
     //==============================================================================
     void writeMakefile(OutputStream& out, const Array<RelativePath>& files) const
     {
-      StringPairArray vars;
-      StringPairArray extraDefinitions;
-      StringArray extraIncludePaths;
-
-      StringPairArray targetProperties;
-
-      ConstConfigIterator configIt(*this);
-
-      String targetFilename, targetName = projectName;
-
-      if (configIt.next())
-      {
-        targetName = (*configIt).getTargetBinaryNameString();
-        targetName = targetName.replace("_d", "", false);
-      }
-
-      out << "# Automatically generated CMakeLists.txt, created by the Introjucer" << newLine
-          << "# Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!" << newLine
-          << newLine;
-
-      out << "cmake_minimum_required(VERSION 2.6)" << newLine;
-
-      out << newLine;
-
-      out << "project(" <<   addQuotesIfContainsSpaces(projectName)  << ")"
-          << newLine;
-
-      out << newLine;
-
-      out << "if(NOT CMAKE_BUILD_TYPE)" << newLine
-          << "  set(CMAKE_BUILD_TYPE " << escapeSpaces(getConfiguration(0)->getName()) << ")" << newLine
-          << "endif()" << newLine;
-
-      out << newLine;
-
-      out << "if(MINGW)" << newLine
-          << "  add_definitions(-D__MINGW__=1)" << newLine
-          << "elseif(UNIX)" << newLine
-          << "  add_definitions(-DLINUX=1)" << newLine
-          << "elseif(MSVC)" << newLine
-          << "  add_definitions(-D_WINDOWS=1)" << newLine
-          << "endif()" << newLine;
-
-      out << "if(WIN32)" << newLine
-          << "  add_definitions(-DWIN32=1)" << newLine
-          << "endif()" << newLine;
-
-      out << newLine;
-
-      setFlags(vars, extraDefinitions, extraIncludePaths);
-      StringArray varNames = vars.getAllKeys();
-      for (int i = 0; i < varNames.size(); ++i)
-      {
-        auto key = varNames[i];
-
-        out << "set(" << key << " " << addQuotesIfContainsSpaces(vars[key]) << ")" << newLine;
-      }
-
-      out << newLine;
-
-      if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
-      {
-        out << "# -- Setup up proper library directory  -----------" << newLine;
-        out << "get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)" << newLine;
+        StringPairArray vars;
+        StringPairArray extraDefinitions;
+        StringArray extraIncludePaths;
+  
+        StringPairArray targetProperties;
+  
+        ConstConfigIterator configIt(*this);
+  
+        String targetFilename, targetName = projectName;
+  
+        if (configIt.next())
+        {
+						targetName = (*configIt).getTargetBinaryNameString();
+						targetName = targetName.replace("_d", "", false);
+        }
+  
+        out << "# Automatically generated CMakeLists.txt, created by the Introjucer" << newLine
+            << "# Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!" << newLine
+            << newLine;
+  
+        out << "cmake_minimum_required(VERSION 2.6)" << newLine;
+  
         out << newLine;
-        out << "if(\"${LIB64}\" STREQUAL \"TRUE\")" << newLine;
-        out << "  set(LIBSUFFIX 64)" << newLine;
-        out << "else()" << newLine;
-        out << "  set(LIBSUFFIX \"\")" << newLine;
+  
+        out << "project(" << addQuotesIfContainsSpaces(projectName)  << ")"
+            << newLine;
+  
+        out << newLine;
+  
+        out << "if(NOT CMAKE_BUILD_TYPE)" << newLine
+            << "  set(CMAKE_BUILD_TYPE " << escapeSpaces(getConfiguration(0)->getName()) << ")" << newLine
+            << "endif()" << newLine;
+  
+        out << newLine;
+  
+        out << "if(MINGW)" << newLine
+            << "  add_definitions(-D__MINGW__=1)" << newLine
+            << "elseif(UNIX)" << newLine
+            << "  add_definitions(-DLINUX=1)" << newLine
+            << "elseif(MSVC)" << newLine
+            << "  add_definitions(-D_WINDOWS=1)" << newLine
+            << "endif()" << newLine;
+  
+        out << "if(WIN32)" << newLine
+            << "  add_definitions(-DWIN32=1)" << newLine
+            << "endif()" << newLine;
+  
+        out << newLine;
+  
+        setFlags(vars, extraDefinitions, extraIncludePaths);
+        StringArray varNames = vars.getAllKeys();
+  
+        for (int i = 0; i < varNames.size(); ++i)
+        {
+						auto key = varNames[i];
+		
+						out << "set(" << key << " " << addQuotesIfContainsSpaces(vars[key]) << ")" << newLine;
+        }
+  
+        out << newLine;
+  
+        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
+        {
+						out << "# -- Setup up proper library directory  -----------" << newLine;
+						out << "get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)" << newLine;
+						out << newLine;
+						out << "if(\"${LIB64}\" STREQUAL \"TRUE\")" << newLine;
+						out << "  set(LIBSUFFIX 64)" << newLine;
+						out << "else()" << newLine;
+						out << "  set(LIBSUFFIX \"\")" << newLine;
+						out << "endif()" << newLine;
+						out << newLine;
+        }
+  
+        out << "# --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
+        out << "if(UNIX)" << newLine;
+        writeIncludeFind(out, "X11", true, "  ");
+        out << newLine;
+  
+        out << "  include(CheckLibraryExists)" << newLine;
+  
+        out << "  check_library_exists(dl dlopen \"\" HAVE_LIBDL)" << newLine;
+        out << "  if(HAVE_LIBDL)" << newLine;
+        out << "    link_libraries(dl)" << newLine ;
+        out << "  endif()" << newLine;
+  
+        out << "  check_library_exists(pthread pthread_create \"\" HAVE_LIBPTHREAD)" << newLine;
+        out << "  if(HAVE_LIBPTHREAD)" << newLine;
+        out << "    link_libraries(pthread)" << newLine ;
+        out << "  endif()" << newLine;
+  
         out << "endif()" << newLine;
         out << newLine;
-      }
-
-      out << "# --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
-      out << "if(UNIX)" << newLine;
-      writeIncludeFind(out, "X11", true, "  ");
-      out << newLine;
-
-      out << "  include(CheckLibraryExists)" << newLine;
-
-      out << "  check_library_exists(dl dlopen \"\" HAVE_LIBDL)" << newLine;
-      out << "  if(HAVE_LIBDL)" << newLine;
-      out << "    link_libraries(dl)" << newLine ;
-      out << "  endif()" << newLine;
-
-      out << "  check_library_exists(pthread pthread_create \"\" HAVE_LIBPTHREAD)" << newLine;
-      out << "  if(HAVE_LIBPTHREAD)" << newLine;
-      out << "    link_libraries(pthread)" << newLine ;
-      out << "  endif()" << newLine;
-
-      out << "endif()" << newLine;
-      out << newLine;
-
-
-      out << "# --- Check for Freetype library -------------" << newLine;
-      writeIncludeFind(out, "Freetype", true);
-      out << newLine;
-
-      if (getProject().isConfigFlagEnabled("JUCE_USE_CURL"))
-      {
-        out << "# --- Check for libcurl -------------" << newLine;
-        writeIncludeFind(out, "CURL");
+  
+  
+        out << "# --- Check for Freetype library -------------" << newLine;
+        writeIncludeFind(out, "Freetype", true);
         out << newLine;
-      }
-
-      writeLinkLibraries(out);
-
-      out << newLine;
-
-      for (ConstConfigIterator config(*this); config.next();)
-        writeConfig(out, vars, *config, targetName, extraDefinitions, extraIncludePaths, targetProperties);
-
-      String libraryType = projectType.isStaticLibrary() ? "STATIC" : (targetName.startsWith("lib") ? "SHARED" : "MODULE");
-
-      if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
-        out << "add_library(" << addQuotesIfContainsSpaces(targetName) << " " << libraryType;
-      else
-        out << "add_executable(" << addQuotesIfContainsSpaces(targetName);
-
-      writeSources(out, files);
-      out << ")" << newLine;
-
-      StringArray propNames = targetProperties.getAllKeys();
-      for (int i = 0; i < propNames.size(); ++i)
-      {
-        auto key = propNames[i];
-
-        out << "set_target_properties("  << addQuotesIfContainsSpaces(targetName) << " PROPERTIES " << key << " " << targetProperties[key].quoted() << ")" << newLine;
-      }
-      out << newLine;
-
-
+  
+        if (getProject().isConfigFlagEnabled("JUCE_USE_CURL"))
+        {
+						out << "# --- Check for libcurl -------------" << newLine;
+						writeIncludeFind(out, "CURL");
+						out << newLine;
+        }
+  
+        writeLinkLibraries(out);
+  
+        out << newLine;
+  
+        for(ConstConfigIterator config(*this); config.next();)
+						writeConfig(out, vars, *config, targetName, extraDefinitions, extraIncludePaths, targetProperties);
+  
+        String libraryType = projectType.isStaticLibrary() ? "STATIC" : (targetName.startsWith("lib") ? "SHARED" : "MODULE");
+  
+        if(projectType.isStaticLibrary() || projectType.isDynamicLibrary())
+						out << "add_library(" << addQuotesIfContainsSpaces(targetName) << " " << libraryType;
+        else
+						out << "add_executable(" << addQuotesIfContainsSpaces(targetName);
+		
+        writeSources(out, files);
+        out << ")" << newLine;
+  
+        StringArray propNames = targetProperties.getAllKeys();
+  
+        for(int i = 0; i < propNames.size(); ++i)
+        {
+            auto key = propNames[i];
+    
+            out << "set_target_properties("  << addQuotesIfContainsSpaces(targetName)
+                << " PROPERTIES " << key << " " << targetProperties[key].quoted() << ")"
+                << newLine;
+        }
+  
+        out << newLine;
     }
 
     //==============================================================================
     String getArchFlags(const BuildConfiguration& config) const
     {
-      if(const CMakeBuildConfiguration* makeConfig = dynamic_cast<const CMakeBuildConfiguration*>(&config))
-        if(!makeConfig->getArchitectureTypeVar().isVoid())
-          return makeConfig->getArchitectureTypeVar();
+        if(const CMakeBuildConfiguration* makeConfig = dynamic_cast<const CMakeBuildConfiguration*>(&config))
+            if(!makeConfig->getArchitectureTypeVar().isVoid())
+                return makeConfig->getArchitectureTypeVar();
 
-      return ""; //-march=native";
+        return ""; //-march=native";
     }
 
     //==============================================================================
