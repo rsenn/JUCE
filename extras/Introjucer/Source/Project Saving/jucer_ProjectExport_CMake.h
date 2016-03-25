@@ -306,7 +306,7 @@ private:
         if (config.isDebug())
         {
             compileFlags.add("-g");
-            compileFlags.add("-gdb");
+            compileFlags.add("-ggdb");
         }
 
         compileFlags.add("-O" + config.getGCCOptimisationFlag());
@@ -582,9 +582,15 @@ private:
         out << newLine;
 
         out << "  include(CheckLibraryExists)" << newLine;
+
         out << "  check_library_exists(dl dlopen \"\" HAVE_LIBDL)" << newLine;
         out << "  if(HAVE_LIBDL)" << newLine;
         out << "    link_libraries(dl)" << newLine ;
+        out << "  endif()" << newLine;
+
+        out << "  check_library_exists(pthread pthread_create \"\" HAVE_LIBPTHREAD)" << newLine;
+        out << "  if(HAVE_LIBPTHREAD)" << newLine;
+        out << "    link_libraries(pthread)" << newLine ;
         out << "  endif()" << newLine;
 
         out << "endif()" << newLine;
