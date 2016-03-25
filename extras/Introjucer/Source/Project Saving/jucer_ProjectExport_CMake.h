@@ -136,7 +136,7 @@ protected:
         CMakeBuildConfiguration(Project& p, const ValueTree& settings, const ProjectExporter& e)
             : BuildConfiguration(p, settings, e)
         {
-            setValueIfVoid(getLibrarySearchPathValue(), "/usr/XFATAL_ERRORFATAL_ERROR11R6/lib/");
+            setValueIfVoid(getLibrarySearchPathValue(), "${CMAKE_SYSTEM_LIBRARY_PATH}");
         }
 
         Value getArchitectureType()
@@ -378,6 +378,7 @@ private:
 				  compileFlags.add(t);
 				}
 
+					std::cerr << "compileFlags arg: " << compileFlags.joinIntoString("|") << std::endl;
 
         out << "# Configuration: " << config.getName() << newLine;
 
