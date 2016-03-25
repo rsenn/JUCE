@@ -182,7 +182,7 @@ private:
         }
         else
         {
-            if (projectItem.shouldBeCompiled())
+         //   if (projectItem.shouldBeCompiled())
                 results.add(RelativePath(projectItem.getFile(), getTargetFolder(), RelativePath::buildTargetFolder));
         }
     }
