@@ -64,12 +64,28 @@ public:
     //==============================================================================
     bool canLaunchProject() override
     {
-        return false;
+        return true;
     }
     bool launchProject() override
     {
-        return false;
+        File buildDir = getTargetFolder();
+				ChildProcess proc;
+				String output;
+				const char* cmakeCmd[] = { 
+					"cmake", "-DCMAKE_VERBOSE_MAKEFILE=TRUE", ".",
+					nullptr
+				};
+
+				buildDir.setAsCurrentWorkingDirectory();
+
+       proc.start(cmakeCmd, wantStdOut|wantStdErr);
+			 proc.waitForProcessToFinish(30*1000);
+
+      output = proc.readAllProcessOutput(); 
+
+      return proc.getExitCode() == 0;
     }
+
     bool usesMMFiles() const override
     {
         return false;
