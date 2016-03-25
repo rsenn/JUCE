@@ -238,7 +238,7 @@ private:
 
     }
 
-    void writeCppFlags(OutputStream& out, const BuildConfiguration& config, const StringPairArray& extraDefs, const StringArray& extraIncPaths) const
+    void writeCppFlags(OutputStream& out, const BuildConfiguration& config, StringPairArray& extraDefs, StringArray& extraIncPaths) const
     {
         writeDefineFlags(out, config, extraDefs);
         writeHeaderPathFlags(out, config, extraIncPaths);
@@ -292,7 +292,7 @@ private:
 
     }
 
-    void writeCompileFlags(OutputStream& out, const BuildConfiguration& config, const StringArray& flags) const
+    void setCompileFlags(StringPairArray& vars, const BuildConfiguration& config, const StringArray& flags) const
     {
         StringArray compileFlags = flags;
 
@@ -307,11 +307,13 @@ private:
         if (compileFlags.size() == 0)
             return;
 
-        out  << "set(CMAKE_CXX_FLAGS_"  << config.getName().toUpperCase() <<  " " << getCleanedStringArray(compileFlags).joinIntoString(" ").quoted() << ")" << newLine;
+        vars.set("CMAKE_CXX_FLAGS_"  + config.getName().toUpperCase(), getCleanedStringArray(compileFlags).joinIntoString(" "));
+
+        //out  << "set(CMAKE_CXX_FLAGS_"  << config.getName().toUpperCase() <<  " " << getCleanedStringArray(compileFlags).joinIntoString(" ").quoted() << ")" << newLine;
     }
 
 
-    void writeLinkerFlags(OutputStream& out, const BuildConfiguration& config) const
+    void setLinkerFlags(StringPairArray& vars, const BuildConfiguration& config) const
     {
         StringArray flags(makefileExtraLinkerFlags);
 
@@ -327,60 +329,71 @@ private:
             String linkFlags = getCleanedStringArray(flags).joinIntoString(" ").trimStart();
 
             if (linkFlags.length() > 0)
-                out  << "set(LINK_FLAGS_"  << config.getName().toUpperCase() << " " << linkFlags.quoted() << ")" << newLine;
+                vars.set("LINK_FLAGS_" + config.getName().toUpperCase(), linkFlags);
+            //out  << "set(LINK_FLAGS_"  << config.getName().toUpperCase() << " " << linkFlags.quoted() << ")" << newLine;
         }
     }
 
-    void writeConfig(OutputStream& out, const BuildConfiguration& config, const String& targetName) const
+    void setFlags(StringPairArray& vars, StringPairArray& extraDefs, StringArray& extraIncPaths) const
+    {
+        for (ConstConfigIterator config(*this); config.next();)
+        {
+            StringArray compileFlags,  extraCompileFlags = StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");
+            String cppStandardToUse = getCppStandardString();
+
+            if (cppStandardToUse.isEmpty())
+                cppStandardToUse = "-std=c++11";
+
+            compileFlags.add(cppStandardToUse);
+
+            for (int i = 0; i < extraCompileFlags.size(); ++i)
+            {
+                const String& t = extraCompileFlags[i];
+
+                String arg;
+
+                //std::cerr << "extraCompilerFlags arg: " << t << std::endl;
+
+                if (t.startsWith("-"))
+                {
+                    if (t.length() > 2)
+                        arg = t.substring(2);
+                    else
+                        arg = extraCompileFlags[++i];
+
+                    if (t.startsWith("-I"))
+                    {
+                        RelativePath includePath(arg, RelativePath::projectFolder);
+                        extraIncPaths.add(includePath.toUnixStyle());
+                        continue;
+                    }
+                    if (t.startsWith("-D"))
+                    {
+                        extraDefs.set(
+                            arg.upToFirstOccurrenceOf("=", false, false),
+                            arg.fromFirstOccurrenceOf("=", false, false)
+                        );
+                        continue;
+                    }
+                }
+
+                //compileFlags.add(t);
+            }
+
+            setCompileFlags(vars, *config, compileFlags);
+            setLinkerFlags(vars, *config);
+
+            //std::cerr << "compileFlags arg: " << compileFlags.joinIntoString("|") << std::endl;
+
+        }
+    }
+
+    void writeConfig(OutputStream& out, StringPairArray& vars, const BuildConfiguration& config, const String& targetName, StringPairArray& extraDefs, StringArray& extraIncPaths,   StringPairArray& targetProps) const
     {
         bool isLibrary = (projectType.isStaticLibrary() || projectType.isDynamicLibrary());
         const String buildDirName("build");
         const String intermediatesDirName(buildDirName + "/intermediate/" + config.getName());
         String outputDir(buildDirName);
-        StringArray compileFlags, extraIncludePaths, extraCompileFlags = StringArray::fromTokens(replacePreprocessorTokens(config, getExtraCompilerFlagsString()), "; ", "\"'");
-        StringPairArray extraDefinitions;
-        String cppStandardToUse = getCppStandardString();
-
-        if (cppStandardToUse.isEmpty())
-            cppStandardToUse = "-std=c++11";
-
-        compileFlags.add(cppStandardToUse);
-
-        for (int i = 0; i < extraCompileFlags.size(); ++i)
-        {
-            const String& t = extraCompileFlags[i];
-
-            String arg;
-
-            //std::cerr << "extraCompilerFlags arg: " << t << std::endl;
-
-            if (t.startsWith("-"))
-            {
-                if (t.length() > 2)
-                    arg = t.substring(2);
-                else
-                    arg = extraCompileFlags[++i];
-
-                if (t.startsWith("-I"))
-                {
-                    RelativePath includePath(arg, RelativePath::projectFolder);
-                    extraIncludePaths.add(includePath.toUnixStyle());
-                    continue;
-                }
-                if (t.startsWith("-D"))
-                {
-                    extraDefinitions.set(
-                        arg.upToFirstOccurrenceOf("=", false, false),
-                        arg.fromFirstOccurrenceOf("=", false, false)
-                    );
-                    continue;
-                }
-            }
-
-            //compileFlags.add(t);
-        }
-
-        //std::cerr << "compileFlags arg: " << compileFlags.joinIntoString("|") << std::endl;
 
         out << "# Configuration: " << config.getName() << newLine;
 
@@ -392,7 +405,7 @@ private:
 
         out << "if(CMAKE_BUILD_TYPE STREQUAL " << config.getName().quoted() << ")" << newLine;
 
-        writeCppFlags(out, config, extraDefinitions, extraIncludePaths);
+        writeCppFlags(out, config, extraDefs, extraIncPaths);
 
         if (isLibrary && makefileIsDLL)
             out << "  set(BUILD_SHARED_LIBS ON)" << newLine;
@@ -402,8 +415,7 @@ private:
         out << "endif()" << newLine;
         out << newLine;
 
-        writeCompileFlags(out, config, compileFlags);
-        writeLinkerFlags(out, config);
+
 
         String targetFilename(replacePreprocessorTokens(config, config.getTargetBinaryNameString()));
 
@@ -425,10 +437,20 @@ private:
         std::cerr << "targetFilename (" << config.getName() << "): " << targetFilename << std::endl;
 
         if (targetFilename != targetName)
-            out << "set_target_properties(" <<   addQuotesIfContainsSpaces(targetName)
-                << "  PROPERTIES"
-                << "  " << (isLibrary ? "LIBRARY_" : "") << "OUTPUT_NAME_" << config.getName().toUpperCase() << " " << addQuotesIfContainsSpaces(targetFilename)
-                << ")" << newLine;
+        {
+            //StringPairArray props;
+
+            String key = String(isLibrary ? "LIBRARY_" : "") + "OUTPUT_NAME_" + config.getName().toUpperCase();
+            targetProps.set(key, targetFilename);
+            
+						
+               std::cerr << "target property: " << key << " = " << targetFilename << std::endl;
+						//targetProps.set(targetName,props);
+            //            out << "set_target_properties(" <<   addQuotesIfContainsSpaces(targetName)
+            //                << "  PROPERTIES"
+            //                << "  " << (isLibrary ? "LIBRARY_" : "") << "OUTPUT_NAME_" << config.getName().toUpperCase() << " " << addQuotesIfContainsSpaces(targetFilename)
+            //                << ")" << newLine;
+        }
 
         out << "# End of configuration: " << config.getName() << newLine;
         out << newLine;
@@ -473,20 +495,29 @@ private:
 
     void writeMakefile(OutputStream& out, const Array<RelativePath>& files) const
     {
+        StringPairArray vars;
+        StringPairArray extraDefinitions;
+        StringArray extraIncludePaths;
+
+        //        HashMap< String, StringPairArray > targetProperties;
+        StringPairArray targetProperties;
+
         ConstConfigIterator configIt(*this);
 
         String targetFilename, targetName = projectName;
 
-        if (configIt.next())
+        if (configIt.next()) {
             targetName = (*configIt).getTargetBinaryNameString();
+						targetName = targetName.replace("_d", "", false);
+					}
 
-//						targetFilename = targetName;
-//
-//        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
-//            targetFilename = "lib"+targetFilename;
-//
-//        if (projectType.isStaticLibrary())
-//            targetFilename = targetFilename+"_s";
+        //						targetFilename = targetName;
+        //
+        //        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
+        //            targetFilename = "lib"+targetFilename;
+        //
+        //        if (projectType.isStaticLibrary())
+        //            targetFilename = targetFilename+"_s";
 
 
         out << "# Automatically generated CMakeLists.txt, created by the Introjucer" << newLine
@@ -522,6 +553,17 @@ private:
 
         out  << newLine;
 
+        setFlags(vars, extraDefinitions, extraIncludePaths);
+        StringArray varNames = vars.getAllKeys();
+        for (int i = 0; i < varNames.size(); ++i)
+        {
+            auto key = varNames[i];
+
+            out << "set(" << key << " " << addQuotesIfContainsSpaces(vars[key]) << ")" << newLine;
+        }
+
+        out  << newLine;
+
         if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
         {
             out << "# -- Setup up proper library directory  -----------" << newLine;
@@ -534,18 +576,6 @@ private:
             out << "endif()" << newLine;
             out << newLine;
         }
-
-        String libraryType = projectType.isStaticLibrary() ? "STATIC" : (targetName.startsWith("lib") ? "SHARED" : "MODULE");
-
-        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
-            out << "add_library(" << addQuotesIfContainsSpaces(targetName) << " " << libraryType;
-        else
-            out << "add_executable(" << addQuotesIfContainsSpaces(targetName);
-
-        writeSources(out, files);
-        out << ")" << newLine;
-
-        out << newLine;
 
         out << "# --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
         out << "if(UNIX)" << newLine;
@@ -573,12 +603,35 @@ private:
             out  << newLine;
         }
 
-        for (ConstConfigIterator config(*this); config.next();)
-            writeConfig(out, *config, targetName);
-
         writeLinkLibraries(out);
 
+        out << newLine;
+
+        for (ConstConfigIterator config(*this); config.next();)
+            writeConfig(out, vars, *config, targetName, extraDefinitions, extraIncludePaths, targetProperties);
+
+        String libraryType = projectType.isStaticLibrary() ? "STATIC" : (targetName.startsWith("lib") ? "SHARED" : "MODULE");
+
+        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
+            out << "add_library(" << addQuotesIfContainsSpaces(targetName) << " " << libraryType;
+        else
+            out << "add_executable(" << addQuotesIfContainsSpaces(targetName);
+
+        writeSources(out, files);
+        out << ")" << newLine;
+
+        StringArray propNames = targetProperties.getAllKeys();
+        for (int i = 0; i < propNames.size(); ++i)
+        {
+            auto key = propNames[i];
+
+            out << "set_target_properties("  << addQuotesIfContainsSpaces(targetName) << " PROPERTIES " << key << " " << targetProperties[key].quoted() << ")" << newLine;
+        }
+        out << newLine;
+
+
     }
+
 
     String getArchFlags(const BuildConfiguration& config) const
     {
