@@ -177,14 +177,39 @@ private:
     {
         if (projectItem.isGroup())
         {
-            for (int i = 0; i < projectItem.getNumChildren(); ++i)
+//#ifdef DEBUG
+//        std::cerr << "projectitem group: " << projectItem.getName()
+//				 << "(compile=" << (int)projectItem.shouldBeCompiled()
+//				 << ",resource=" << int(projectItem.shouldBeAddedToBinaryResources()) 
+//				 //<< ",group_folder='" << projectItem.getNameValue().toString()
+//				 << "',id='" << projectItem.getID() //determineGroupFolder().getFullPathName() 
+//				<<	"')" << std::endl;
+//#endif
+
+            for (int i = 0; i < projectItem.getNumChildren(); ++i) {
+							//	if(projectItem.getID() == "__jucelibfiles" && !projectItem.getChild(i).getName().endsWith(".h")) 
+							//		continue;
                 findAllFilesToCompile(projectItem.getChild(i), results);
+							}
         }
         else
         {
-            if (projectItem.shouldBeCompiled() ||  projectItem.getFile().hasFileExtension (headerFileExtensions)) {
-								if(!projectItem.shouldBeAddedToBinaryResources())
-										results.add(RelativePath(projectItem.getFile(), getTargetFolder(), RelativePath::buildTargetFolder));
+            const auto& f = projectItem.getFile();
+
+            if (projectItem.shouldBeCompiled() ||  f.hasFileExtension (headerFileExtensions)) {
+								if(!projectItem.shouldBeAddedToBinaryResources()) {
+									RelativePath path(f, getTargetFolder(), RelativePath::buildTargetFolder);
+//#ifdef DEBUG
+//        std::cerr << "adding source: " << path.toUnixStyle() 
+//				 << "(compile=" << (int)projectItem.shouldBeCompiled()
+//				 << ",resource=" << int(projectItem.shouldBeAddedToBinaryResources()) 
+//				 << ",name='" << projectItem.getName()
+//				 //<< ",group_folder='" << projectItem.getNameValue().toString()
+//				 << "',id='" << projectItem.getID() //determineGroupFolder().getFullPathName() 
+//				<<	"')" << std::endl;
+//#endif
+										results.add(path);
+									}
 					  }
         }
     }
