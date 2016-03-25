@@ -187,6 +187,7 @@ private:
         }
     }
 
+    //==============================================================================
     void writeDefineFlags(OutputStream& out, const BuildConfiguration& config, const StringPairArray& extraDefs) const
     {
         StringPairArray defines(extraDefs);
@@ -208,6 +209,7 @@ private:
         }
     }
 
+    //==============================================================================
     void writeHeaderPathFlags(OutputStream& out, const BuildConfiguration& config, const StringArray& extraIncPaths) const
     {
         StringArray searchPaths(extraSearchPaths);
@@ -230,6 +232,7 @@ private:
         out << ")" << newLine;
     }
 
+    //==============================================================================
     void writePathList(OutputStream& out,  const BuildConfiguration& config, const StringArray& list, const String& indent = "") const
     {
         out << indent;
@@ -238,12 +241,14 @@ private:
 
     }
 
+    //==============================================================================
     void writeCppFlags(OutputStream& out, const BuildConfiguration& config, StringPairArray& extraDefs, StringArray& extraIncPaths) const
     {
         writeDefineFlags(out, config, extraDefs);
         writeHeaderPathFlags(out, config, extraIncPaths);
     }
 
+    //==============================================================================
     void writeLinkLibraries(OutputStream& out) const
     {
         const StringArray& libs = isWindows() ? mingwLibs : (isOSX() ? xcodeLibs : linuxLibs);
@@ -273,6 +278,7 @@ private:
         }
     }
 
+    //==============================================================================
     void writeLinkDirectories(OutputStream& out, const BuildConfiguration& config) const
     {
         StringArray libraryDirs;
@@ -292,6 +298,7 @@ private:
 
     }
 
+    //==============================================================================
     void setCompileFlags(StringPairArray& vars, const BuildConfiguration& config, const StringArray& flags) const
     {
         StringArray compileFlags = flags;
@@ -313,6 +320,7 @@ private:
     }
 
 
+    //==============================================================================
     void setLinkerFlags(StringPairArray& vars, const BuildConfiguration& config) const
     {
         StringArray flags(makefileExtraLinkerFlags);
@@ -334,6 +342,7 @@ private:
         }
     }
 
+    //==============================================================================
     void setFlags(StringPairArray& vars, StringPairArray& extraDefs, StringArray& extraIncPaths) const
     {
         for (ConstConfigIterator config(*this); config.next();)
@@ -388,6 +397,7 @@ private:
         }
     }
 
+    //==============================================================================
     void writeConfig(OutputStream& out, StringPairArray& vars, const BuildConfiguration& config, const String& targetName, StringPairArray& extraDefs, StringArray& extraIncPaths,   StringPairArray& targetProps) const
     {
         bool isLibrary = (projectType.isStaticLibrary() || projectType.isDynamicLibrary());
@@ -429,33 +439,29 @@ private:
 
         if (!config.isDebug())
             targetFilename = targetFilename.replace("_d", "", false);
-        //if(projectType.isStaticLibrary())  targetFilename += "_s";
-        //
-        //
 
+#ifdef DEBUG
         std::cerr << "config.getTargetBinaryNameString: " << config.getTargetBinaryNameString() << std::endl;
+#endif
+#ifdef DEBUG
         std::cerr << "targetFilename (" << config.getName() << "): " << targetFilename << std::endl;
+#endif
 
         if (targetFilename != targetName)
         {
-            //StringPairArray props;
-
             String key = String(isLibrary ? "LIBRARY_" : "") + "OUTPUT_NAME_" + config.getName().toUpperCase();
             targetProps.set(key, targetFilename);
-            
-						
-               std::cerr << "target property: " << key << " = " << targetFilename << std::endl;
-						//targetProps.set(targetName,props);
-            //            out << "set_target_properties(" <<   addQuotesIfContainsSpaces(targetName)
-            //                << "  PROPERTIES"
-            //                << "  " << (isLibrary ? "LIBRARY_" : "") << "OUTPUT_NAME_" << config.getName().toUpperCase() << " " << addQuotesIfContainsSpaces(targetFilename)
-            //                << ")" << newLine;
+
+#ifdef DEBUG
+            std::cerr << "target property: " << key << " = " << targetFilename << std::endl;
+#endif
         }
 
         out << "# End of configuration: " << config.getName() << newLine;
         out << newLine;
     }
 
+    //==============================================================================
     void writeSources(OutputStream& out, const Array<RelativePath>& files) const
     {
         out << newLine;
@@ -469,6 +475,7 @@ private:
         }
     }
 
+    //==============================================================================
     void writeIncludeFind(OutputStream& out, const String& libraryName, bool required = false, const String& indent = "") const
     {
         String varName = libraryName.toUpperCase();
@@ -493,32 +500,24 @@ private:
         out << indent << "endif()" << newLine;
     }
 
+    //==============================================================================
     void writeMakefile(OutputStream& out, const Array<RelativePath>& files) const
     {
         StringPairArray vars;
         StringPairArray extraDefinitions;
         StringArray extraIncludePaths;
 
-        //        HashMap< String, StringPairArray > targetProperties;
         StringPairArray targetProperties;
 
         ConstConfigIterator configIt(*this);
 
         String targetFilename, targetName = projectName;
 
-        if (configIt.next()) {
+        if (configIt.next())
+        {
             targetName = (*configIt).getTargetBinaryNameString();
-						targetName = targetName.replace("_d", "", false);
-					}
-
-        //						targetFilename = targetName;
-        //
-        //        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
-        //            targetFilename = "lib"+targetFilename;
-        //
-        //        if (projectType.isStaticLibrary())
-        //            targetFilename = targetFilename+"_s";
-
+            targetName = targetName.replace("_d", "", false);
+        }
 
         out << "# Automatically generated CMakeLists.txt, created by the Introjucer" << newLine
             << "# Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!" << newLine
@@ -632,7 +631,7 @@ private:
 
     }
 
-
+    //==============================================================================
     String getArchFlags(const BuildConfiguration& config) const
     {
         if (const CMakeBuildConfiguration* makeConfig = dynamic_cast<const CMakeBuildConfiguration*>(&config))
@@ -642,6 +641,7 @@ private:
         return ""; //-march=native";
     }
 
+    //==============================================================================
     void initialiseDependencyPathValues(TargetOS::OS os)
     {
         vst2Path.referTo(Value(new DependencyPathValueSource(getSetting(Ids::vstFolder),
