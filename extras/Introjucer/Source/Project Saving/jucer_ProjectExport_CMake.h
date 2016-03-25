@@ -400,9 +400,8 @@ private:
     }
 
     //==============================================================================
-    void writeConfig(OutputStream& out, StringPairArray& vars, const BuildConfiguration& config,
-		     const String& targetName, StringPairArray& extraDefs, StringArray& extraIncPaths,
-		     StringPairArray& targetProps) const
+    void writeConfig(OutputStream& out, const BuildConfiguration& config, const String& targetName,
+			               StringPairArray& extraDefs, StringArray& extraIncPaths, StringPairArray& targetProps) const
     {
         bool isLibrary = (projectType.isStaticLibrary() || projectType.isDynamicLibrary());
         const String buildDirName("build");
@@ -581,7 +580,7 @@ private:
   
         out << "# --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
         out << "if(UNIX)" << newLine;
-        writeIncludeFind(out, "X11", true, "  ");
+        writeIncludeFind(out, "X11", true);
         out << newLine;
   
         out << "  include(CheckLibraryExists)" << newLine;
@@ -616,7 +615,7 @@ private:
         out << newLine;
   
         for(ConstConfigIterator config(*this); config.next();)
-						writeConfig(out, vars, *config, targetName, extraDefinitions, extraIncludePaths, targetProperties);
+						writeConfig(out, *config, targetName, extraDefinitions, extraIncludePaths, targetProperties);
   
         String libraryType = projectType.isStaticLibrary() ? "STATIC" : (targetName.startsWith("lib") ? "SHARED" : "MODULE");
   
