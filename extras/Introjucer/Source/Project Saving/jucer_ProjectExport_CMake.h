@@ -611,7 +611,12 @@ private:
         out << newLine;
   
         out << "  include(CheckLibraryExists)" << newLine;
-  
+ 
+        out << "  check_library_exists(GL glXSwapBuffers \"\" HAVE_LIBGL)" << newLine;
+        out << "  if(HAVE_LIBGL)" << newLine;
+        out << "    link_libraries(GL)" << newLine ;
+        out << "  endif()" << newLine;
+
         out << "  check_library_exists(dl dlopen \"\" HAVE_LIBDL)" << newLine;
         out << "  if(HAVE_LIBDL)" << newLine;
         out << "    link_libraries(dl)" << newLine ;
