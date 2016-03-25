@@ -74,7 +74,8 @@ public:
     virtual bool isCodeBlocksLinux() const      { return false; }
     virtual bool isLinuxMakefile() const        { return false; }
     virtual bool isMakefile() const             { return false; }
-    virtual bool isMinGW32Makefile() const      { return false; }
+    virtual bool isCMake() const                { return false; }
+    virtual bool isMinGWMakefile() const      { return false; }
 
     virtual bool isAndroid() const              { return false; }
     virtual bool isWindows() const              { return false; }
@@ -393,9 +394,56 @@ protected:
 
     static Image rescaleImageForIcon (Drawable&, int iconSize);
 
+	public:
+		class NewLineIndent //: private NewLine
+		{
+		public:
+			NewLineIndent() : m_out(nullptr), m_indent()
+			{}
+
+      void setOutputStream(OutputStream* out) {
+				m_out = out;
+			}
+
+			NewLineIndent&
+      operator()(int n) noexcept {
+				if(n > 0) {
+					while(n--) m_indent += "  ";
+				} else if(n < 0) {
+					m_indent = m_indent.dropLastCharacters((-n) * 2);
+				}
+				return *this;
+			}
+
+			inline NewLineIndent& indent() noexcept { return this->operator()(1); }
+			inline OutputStream& unindent(OutputStream& o) noexcept {  this->operator()(-1); o << m_indent; return o; }
+
+			operator StringRef() const noexcept { 
+				if(m_out) { 
+					std::cerr << "m_out = " << (void*)m_out << std::endl; 
+					m_out->writeString(m_indent);  m_out->flush();  
+				}
+				return NewLine::getDefault(); //NewLine::operator StringRef();
+			}
+//			operator String() const {	
+//				if(m_out) { *m_out << m_indent; m_out->flush(); }
+//				return NewLine::getDefault();
+//			}
+
+    private:
+		OutputStream* m_out;
+		  String m_indent;
+		};
+
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProjectExporter)
 };
 
+static inline OutputStream&
+operator<<(OutputStream& o, ProjectExporter::NewLineIndent& nli) {
+	o << NewLine::getDefault();
+	/*o <<*/ nli.operator StringRef();
+	return o;
+}
 
 #endif   // JUCER_PROJECTEXPORTER_H_INCLUDED
