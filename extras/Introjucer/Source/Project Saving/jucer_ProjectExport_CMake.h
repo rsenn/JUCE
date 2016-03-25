@@ -182,8 +182,10 @@ private:
         }
         else
         {
-            //if (projectItem.shouldBeCompiled())
-            results.add(RelativePath(projectItem.getFile(), getTargetFolder(), RelativePath::buildTargetFolder));
+            if (projectItem.shouldBeCompiled() ||  projectItem.getFile().hasFileExtension (headerFileExtensions)) {
+								if(!projectItem.shouldBeAddedToBinaryResources())
+										results.add(RelativePath(projectItem.getFile(), getTargetFolder(), RelativePath::buildTargetFolder));
+					  }
         }
     }
 
@@ -244,7 +246,7 @@ private:
         for(int i = 0; i < list.size(); ++i)
         {
             out << "    "
-                            << addQuotesIfContainsSpaces(FileHelpers::unixStylePath(replacePreprocessorTokens(config, list[i])))
+                            << addQuotesIfContainsSpaces(FileHelpers::unixStylePath(list[i]))
                             << newLine << indent;
         }
     }
