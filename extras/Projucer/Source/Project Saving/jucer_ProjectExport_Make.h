@@ -44,7 +44,7 @@ public:
         name = getNameLinux();
 
         if (getTargetLocationString().isEmpty())
-            getTargetLocationValue() = getDefaultBuildsRootFolder() + "LinuxMakefile";
+            getTargetLocationValue() = getDefaultBuildsRootFolder() + "Linux";
 
         initialiseDependencyPathValues();
     }
