@@ -34,13 +34,14 @@ String getExtraPkgConfigString() const      { return getSettingString (Ids::linu
 
 static MakefileProjectExporter* createForSettings (Project& project, const ValueTree& settings)
 {
-    if (settings.hasType (getValueTreeTypeName()))
-        return new MakefileProjectExporter (project, settings);
+if (settings.hasType (getValueTreeTypeName()))
+    return new MakefileProjectExporter (project, settings);
 
-    return nullptr;
+return nullptr;
 }
 
 
+<<<<<<< HEAD
 //==============================================================================
 MakefileProjectExporter (Project& p, const ValueTree& t)   : ProjectExporter (p, t)
 {
@@ -87,6 +88,10 @@ void createExporterProperties (PropertyListBuilder& properties) override
 {
     static const char* cppStandardNames[]  = { "C++03",       "C++11",       "C++14",        nullptr };
     static const char* cppStandardValues[] = { "-std=c++03",  "-std=c++11",  "-std=c++14",   nullptr };
+=======
+        if (getTargetLocationString().isEmpty())
+            getTargetLocationValue() = getDefaultBuildsRootFolder() + "Linux";
+>>>>>>> c0deb817c... cmake
 
     properties.add (new ChoicePropertyComponent (getCppStandardValue(),
                                                     "C++ standard to use",
