@@ -67,23 +67,49 @@ public:
         return true;
     }
     bool launchProject() override
-    {
-        File buildDir = getTargetFolder();
+		{
+				//RelativePath buildPath( getTargetFolder().getChildFile("CMakeLists.txt"), getTargetFolder(), RelativePath::buildTargetFolder);
+        //File buildDir(buildPath.toUnixStyle());
+				//String location = getTargetLocationValue().getValue();
+        File buildDir(getTargetLocationString()); //(buildPath.toUnixStyle());
 				ChildProcess proc;
 				String output;
+				bool success;
 				const char* cmakeCmd[] = { 
 					"cmake", "-DCMAKE_VERBOSE_MAKEFILE=TRUE", ".",
 					nullptr
 				};
 
+        std::cerr << "LOG - build dir: " << buildDir.getFullPathName() << std::endl;
 				buildDir.setAsCurrentWorkingDirectory();
 
-       proc.start(cmakeCmd, wantStdOut|wantStdErr);
+       proc.start(StringArray(cmakeCmd), ChildProcess::wantStdOut|ChildProcess::wantStdErr);
 			 proc.waitForProcessToFinish(30*1000);
 
       output = proc.readAllProcessOutput(); 
 
-      return proc.getExitCode() == 0;
+      success = ( proc.getExitCode() == 0);
+
+			{ 
+				GroupComponent groupbox;
+				TextButton closebutton("&close");
+				TextEditor editbox;
+
+
+				closebutton.setSize(200,50);
+
+				editbox.setSize(400,300);
+				editbox.setMultiLine(true);
+				editbox.setText(output);
+
+				groupbox.setSize(500,400);
+				groupbox.addAndMakeVisible(editbox);
+				groupbox.addAndMakeVisible(closebutton);
+
+			DialogWindow::showModalDialog("cmake output", &groupbox, nullptr, Colour(0,0,0), true, true, true);
+		}
+
+			return success;
     }
 
     bool usesMMFiles() const override
