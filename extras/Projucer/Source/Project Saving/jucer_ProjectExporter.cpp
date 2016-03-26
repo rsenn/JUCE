@@ -142,6 +142,10 @@ ProjectExporter* ProjectExporter::createExporter (Project& project, const ValueT
     if (exp == nullptr)    exp = CodeBlocksProjectExporter    ::createForSettings (project, settings);
     if (exp == nullptr)    exp = CMakeProjectExporter		::createForSettings (project, settings);
 
+		if(exp == nullptr) {
+			std::cerr << "No such type: " << settings.getType().toString() << std::endl;
+		}
+
     jassert (exp != nullptr);
     return exp;
 }
