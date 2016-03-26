@@ -420,7 +420,7 @@ private:
         for(ConstConfigIterator config(*this); config.next();)
         {
             StringArray compileFlags, extraCompileFlags = 
-								StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");
+		StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");
 
             String cppStandardToUse = getCppStandardString();
 
@@ -601,6 +601,8 @@ private:
 						targetName = (*configIt).getTargetBinaryNameString();
 						targetName = targetName.replace("_d", "", false);
         }
+
+				targetName = targetName.replace(" ", "_");
   
         out << "# Automatically generated CMakeLists.txt, created by the Introjucer" << newLine
             << "# Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!" << newLine
