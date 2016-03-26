@@ -63,7 +63,7 @@ public:
         if (tree.getNumSelectedItems() == 0)
             tree.getRootItem()->setSelected (true, true);
 
-       #if JUCE_MAC || JUCE_WINDOWS
+       #if 1 //JUCE_MAC || JUCE_WINDOWS || JUCE_LINUX
         ApplicationCommandManager& commandManager = IntrojucerApp::getCommandManager();
 
         addAndMakeVisible (createExporterButton);

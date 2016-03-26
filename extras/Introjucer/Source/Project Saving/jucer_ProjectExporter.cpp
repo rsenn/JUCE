@@ -165,6 +165,7 @@ bool ProjectExporter::canProjectBeLaunched (Project* project)
            #elif JUCE_LINUX
             // (this doesn't currently launch.. not really sure what it would do on linux)
             //MakefileProjectExporter::getValueTreeTypeName(),
+            CMakeProjectExporter::getValueTreeTypeName(),
            #endif
             AndroidStudioProjectExporter::getValueTreeTypeName(),
 
