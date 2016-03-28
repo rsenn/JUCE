@@ -160,15 +160,15 @@ public:
     //==============================================================================
     void create(const OwnedArray<LibraryModule>&) const override
     {
-        Array<RelativePath> sourceFiles, libFiles;
+        Array<RelativePath> sourceFiles, libSourceFiles;
 
         for (int i = 0; i < getAllGroups().size(); ++i) {
             findFilesToCompile(getAllGroups().getReference(i), sourceFiles, false);
-            findFilesToCompile(getAllGroups().getReference(i), libFiles, true);
+            findFilesToCompile(getAllGroups().getReference(i), libSourceFiles, true);
         }
 
         MemoryOutputStream mo;
-        writeMakefile(mo, sourceFiles, libFiles);
+        writeMakefile(mo, sourceFiles, libSourceFiles);
 
         overwriteFileIfDifferentOrThrow(getTargetFolder().getChildFile("CMakeLists.txt"), mo);
     }
@@ -218,21 +218,12 @@ protected:
 
 private:
     //==============================================================================
-    void findFilesToCompile(const Project::Item& projectItem, Array<RelativePath>& results, const bool libFiles = false) const
+    void findFilesToCompile(const Project::Item& projectItem, Array<RelativePath>& results, bool libFiles = false) const
     {
         if (projectItem.isGroup())
         {
-//#ifdef DEBUG
-//        std::cerr << "projectitem group: " << projectItem.getName()
-//                 << "(compile=" << (int)projectItem.shouldBeCompiled()
-//                 << ",resource=" << int(projectItem.shouldBeAddedToBinaryResources()) 
-//                 //<< ",group_folder='" << projectItem.getNameValue().toString()
-//                 << "',id='" << projectItem.getID() //determineGroupFolder().getFullPathName() 
-//                <<    "')" << std::endl;
-//#endif
-
             for (int i = 0; i < projectItem.getNumChildren(); ++i) {
-                //if((projectItem.getID() == "__jucelibfiles") != libFiles) continue;
+//                if((projectItem.getID() == "__jucelibfiles") != libFiles) continue;
 
                 findFilesToCompile(projectItem.getChild(i), results, libFiles);
             }
@@ -245,7 +236,9 @@ private:
                 if(!projectItem.shouldBeAddedToBinaryResources()) {
                     RelativePath path(f, getTargetFolder(), RelativePath::buildTargetFolder);
 
-                    if(path.toUnixStyle().contains("/juce_") == libFiles)
+                    bool isJuceLibrarySource = (path.toUnixStyle().contains("modules/juce_") /*&& path.toUnixStyle().endsWith(".cpp")*/);
+
+                    if(isJuceLibrarySource == libFiles)
                         results.add(path);
                 }
             }
@@ -268,12 +261,8 @@ private:
             defines.set("NDEBUG", "1");
         }
 
-        {
-            String defs = createGCCPreprocessorFlags(mergePreprocessorDefs(defines, getAllPreprocessorDefs(config))).trimStart();
-
-            if(defs.length() > 0)
-                out << "  add_definitions(" << defs << ")" << newLine;
-        }
+        if(defines.size() > 0)
+            out << "  add_definitions(" << createGCCPreprocessorFlags(defines).trimStart() << ")" << newLine;
     }
 
     //==============================================================================
@@ -411,8 +400,10 @@ private:
     }
 
     //==============================================================================
-    void setFlags(StringPairArray& vars, StringPairArray& extraDefs, StringArray& extraIncPaths) const
+    StringPairArray getDefaultVars(StringPairArray& extraDefs, StringArray& extraIncPaths) const
     {
+        StringPairArray vars;
+
         for (ConstConfigIterator config(*this); config.next();)
         {
             StringArray compileFlags, extraCompileFlags = 
@@ -448,7 +439,11 @@ private:
                     }
                     if (t.startsWith("-D"))
                     {
-                        extraDefs.set(arg.upToFirstOccurrenceOf("=", false, false), arg.fromFirstOccurrenceOf("=", false, false));
+                        //compileFlags.add(t);
+
+                        auto def = StringArray::fromTokens(arg.unquoted(), "=" , "\"");
+
+                        extraDefs.set(def[0], def[1].unquoted());
                         continue;
                     }
                 }
@@ -461,6 +456,7 @@ private:
 
             //std::cerr << "compileFlags arg: " << compileFlags.joinIntoString("|") << std::endl;
         }
+        return vars;
     }
 
     //==============================================================================
@@ -502,9 +498,9 @@ private:
             targetFilename = targetFilename.substring(0, 4);
 
         if (!config.isDebug() && targetFilename.endsWith("_d"))
-                          targetFilename = targetFilename.substring(0, targetFilename.length() - 2);
-                else if(config.isDebug() && !targetFilename.endsWith("_d"))
-                            targetFilename = targetFilename + "_d";
+            targetFilename = targetFilename.substring(0, targetFilename.length() - 2);
+        else if(config.isDebug() && !targetFilename.endsWith("_d"))
+            targetFilename = targetFilename + "_d";
 
 #ifdef DEBUG
         std::cerr << "config.getTargetBinaryNameString: " << config.getTargetBinaryNameString() << std::endl;
@@ -515,7 +511,7 @@ private:
 
         if (targetFilename != targetName)
         {
-            String key = String(isLibrary ? "LIBRARY_" : "") + "OUTPUT_NAME_" + config.getName().toUpperCase();
+            String key = /*String(isLibrary ? "LIBRARY_" : "") +*/ "OUTPUT_NAME_" + config.getName().toUpperCase();
             targetProps.set(key, targetFilename);
 
 #ifdef DEBUG
@@ -586,6 +582,7 @@ private:
         StringPairArray vars;
         StringPairArray extraDefinitions;
         StringArray extraIncludePaths;
+        auto projectFile = rebaseFromProjectFolderToBuildTarget (RelativePath (getProject().getFile().getFileName(), RelativePath::projectFolder));
   
         StringPairArray targetProperties;
   
@@ -601,28 +598,34 @@ private:
               targetName = targetName.substring(0, targetName.length() - 2);
         }
 
-                targetName = targetName.replace(" ", "_");
+        targetName = targetName.replace(" ", "_");
   
         out << "# Automatically generated CMakeLists.txt, created by the Introjucer" << newLine
             << "# Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!" << newLine
             << newLine;
   
         out << "cmake_minimum_required(VERSION 2.6)" << newLine;
-  
         out << newLine;
   
         out << "project(" << addQuotesIfContainsSpaces(projectName)  << ")" << newLine;
-  
+        out << newLine;
+
+        out << "add_custom_command(OUTPUT \"${CMAKE_SOURCE_DIR}/CMakeLists.txt\"" << newLine 
+            << "    COMMAND Introjucer --resave " << addQuotesIfContainsSpaces(projectFile.getFileName()) << newLine
+            << "    MAIN_DEPENDENCY \"${CMAKE_SOURCE_DIR}/" <<  projectFile.toUnixStyle() << "\"" <<  newLine
+            << "    WORKING_DIRECTORY \"${CMAKE_SOURCE_DIR}/" <<  projectFile.getParentDirectory().toUnixStyle() << "\"" << newLine
+            << "    COMMENT \"Regenerating CMakeLists.txt from " << projectFile.getFileName() << "\"" << newLine
+            << ")" << newLine;
         out << newLine;
   
         out << "if(DEFINED CONFIG)" << newLine
             << "  set(CMAKE_BUILD_TYPE \"${CONFIG}\")" << newLine
-                        << "endif()" << newLine;
+            << "endif()" << newLine;
+        out << newLine;
 
         out << "if(NOT CMAKE_BUILD_TYPE)" << newLine
             << "  set(CMAKE_BUILD_TYPE " << escapeSpaces(getConfiguration(0)->getName()) << ")" << newLine
             << "endif()" << newLine;
-  
         out << newLine;
   
         out << "if(MINGW)" << newLine
@@ -632,28 +635,33 @@ private:
             << "elseif(MSVC)" << newLine
             << "  add_definitions(-D_WINDOWS=1)" << newLine
             << "endif()" << newLine;
+        out << newLine;
   
         out << "if(WIN32)" << newLine
             << "  add_definitions(-DWIN32=1)" << newLine
             << "endif()" << newLine;
-  
         out << newLine;
 
-        if (isLibrary)
-                  vars.set("BUILD_SHARED_LIBS", (makefileIsDLL ? "ON" : "OFF"));
+        vars = getDefaultVars(extraDefinitions, extraIncludePaths);
+        
+        if (isLibrary) {
+            out << "if(NOT DEFINED BUILD_SHARED_LIBS)" << newLine;
+            out << "  set(BUILD_SHARED_LIBS " << ((makefileIsDLL || !projectType.isStaticLibrary()) ? "ON" : "OFF") << ")" << newLine;
+            out << "endif()" << newLine;
+            out << newLine;
+        }
 
-        setFlags(vars, extraDefinitions, extraIncludePaths);
         StringArray varNames = vars.getAllKeys();
   
         for (int i = 0; i < varNames.size(); ++i)
         {
-                        auto key = varNames[i];
-        
-                        out << "set(" << key << " " << addQuotesIfContainsSpaces(vars[key]) << ")" << newLine;
+            const String& key = varNames[i];
+
+            out << "set(" << key << " " << addQuotesIfContainsSpaces(vars[key]) << ")" << newLine;
         }
   
         out << newLine;
- 
+
         if (isLibrary)
         {
             out << "# -- Setup up proper library directory  -----------" << newLine;
