@@ -312,10 +312,8 @@ private:
     }
 
     //==============================================================================
-    void writeLinkLibraries(OutputStream& out) const
+    void writeLinkLibraries(OutputStream& out, const StringArray& libs) const
     {
-        const StringArray& libs =
-                        isWindows() ? mingwLibs : (isOSX() ? xcodeLibs : linuxLibs);
         StringArray libraries;
 
         for(int i = 0; i < libs.size(); ++i)
@@ -333,7 +331,7 @@ private:
 
         if(libraries.size() > 0)
         {
-            out << "link_libraries(" << libraries.joinIntoString(" ") << ")" << newLine;
+            out << "  link_libraries(" << libraries.joinIntoString(" ") << ")" << newLine;
         }
     }
 
@@ -541,7 +539,7 @@ private:
     }
 
     //==============================================================================
-    void writeIncludeFind(OutputStream& out, const String& libraryName, bool required = false) const
+    static void writeIncludeFind(OutputStream& out, const String& libraryName, bool required = false)
     {
         String varName = libraryName.toUpperCase();
 
@@ -579,13 +577,78 @@ private:
         }
         
     //==============================================================================
+    void writeLinuxChecks(OutputStream& out, Project& project) const
+    {
+        out << "if(UNIX)" << newLine;
+        out << "  # --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
+        if(project.getModules().isModuleEnabled ("juce_gui_basics")) {
+            writeIncludeFind(out, "X11", true);
+            out << newLine;
+        }
+  
+        out << "  include(CheckLibraryExists)" << newLine;
+
+        if(project.getModules().isModuleEnabled ("juce_opengl"))
+            writeLibraryCheck(out, "GL", "glXSwapBuffers");
+
+        writeLibraryCheck(out, "dl", "dlopen");
+        writeLibraryCheck(out, "pthread", "pthread_create");
+
+        if(project.getModules().isModuleEnabled ("juce_audio_devices"))
+          //writeLibraryCheck(out, "asound", "snd_pcm_open");
+           writeIncludeFind(out, "ALSA", true);
+  
+        writeLinkLibraries(out, linuxLibs);
+
+        out << "endif()" << newLine;
+        out << newLine;
+    }
+
+    //==============================================================================
+    void writeWindowsChecks(OutputStream& out, Project& project)  const
+    {
+        StringArray libs = mingwLibs;
+        //StringArray libraries;
+        out << "if(WIN32)" << newLine;
+        out << "  # --- Add winsock, winmm and other required libraries on Windows systems -------------" << newLine;
+
+
+        if(project.getModules().isModuleEnabled ("juce_core")) {
+             libs.addIfNotAlreadyThere("ws2_32");
+             libs.addIfNotAlreadyThere("wininet");
+             libs.addIfNotAlreadyThere("winmm");
+        }
+
+
+        
+        //out << "  include(CheckLibraryExists)" << newLine;
+
+
+        if(project.getModules().isModuleEnabled ("juce_gui_basics")) {
+             libs.addIfNotAlreadyThere("imm32");
+        }
+  
+        if(project.getModules().isModuleEnabled ("juce_opengl"))
+             libs.addIfNotAlreadyThere("opengl32");
+
+        if(project.getModules().isModuleEnabled ("juce_audio_devices"))
+          libs.addIfNotAlreadyThere("winmm");
+        
+         writeLinkLibraries(out, libs);
+
+        out << "endif()" << newLine;
+        out << newLine;
+  
+  
+    }
+
+    //==============================================================================
     void writeMakefile(OutputStream& out, const Array<RelativePath>& sourceFiles, const Array<RelativePath>& libFiles) const
     {
         bool isLibrary = (projectType.isStaticLibrary() || projectType.isDynamicLibrary());
         StringPairArray vars;
         StringPairArray extraDefinitions;
         StringArray extraIncludePaths;
-        Project& project = const_cast<CMakeProjectExporter*>(this)->getProject();
         auto projectFile = rebaseFromProjectFolderToBuildTarget (RelativePath (getProject().getFile().getFileName(), RelativePath::projectFolder));
   
         StringPairArray targetProperties;
@@ -613,10 +676,10 @@ private:
             << "# Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!" << newLine
             << newLine;
   
-        out << "cmake_minimum_required(VERSION 2.6)" << newLine;
+        out << "cmake_minimum_required(VERSION 2.8)" << newLine;
         out << newLine;
   
-        out << "project(" << addQuotesIfContainsSpaces(projectName)  << " LANGUAGES CXX)" << newLine;
+        out << "project(" << addQuotesIfContainsSpaces(projectName)  << " C CXX)" << newLine;
         out << newLine;
 
         out << "add_custom_command(OUTPUT \"${CMAKE_SOURCE_DIR}/CMakeLists.txt\"" << newLine 
@@ -684,33 +747,13 @@ private:
             out << newLine;
         }
   
-        out << "# --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
-        out << "if(UNIX)" << newLine;
-        if(project.getModules().isModuleEnabled ("juce_gui_basics")) {
-            writeIncludeFind(out, "X11", true);
-            out << newLine;
-        }
-  
-        out << "  include(CheckLibraryExists)" << newLine;
+        writeLinuxChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
+        writeWindowsChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
 
-        if(project.getModules().isModuleEnabled ("juce_opengl"))
-            writeLibraryCheck(out, "GL", "glXSwapBuffers");
-
-        writeLibraryCheck(out, "dl", "dlopen");
-        writeLibraryCheck(out, "pthread", "pthread_create");
-
-        if(project.getModules().isModuleEnabled ("juce_audio_devices"))
-          //writeLibraryCheck(out, "asound", "snd_pcm_open");
-            writeIncludeFind(out, "ALSA", true);
-  
-        out << "endif()" << newLine;
-        out << newLine;
-  
-  
         out << "# --- Check for Freetype library -------------" << newLine;
         writeIncludeFind(out, "Freetype", true);
         out << newLine;
-  
+
         if (project.isConfigFlagEnabled("JUCE_USE_CURL"))
         {
             out << "# --- Check for libcurl -------------" << newLine;
@@ -718,10 +761,8 @@ private:
             out << newLine;
         }
   
-        writeLinkLibraries(out);
   
         out << newLine;
- 
 
         out << "set(LIBSOURCES";
         writeSources(out, libFiles);
