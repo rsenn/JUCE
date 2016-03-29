@@ -497,6 +497,9 @@ private:
         if (targetFilename .endsWith("_dll"))
             targetFilename = targetFilename.substring(0, 4);
 
+        if(targetFilename.endsWith(".so"))
+            targetFilename = targetFilename.substring(0, targetFilename.length() - 3);
+
         if (!config.isDebug() && targetFilename.endsWith("_d"))
             targetFilename = targetFilename.substring(0, targetFilename.length() - 2);
         else if(config.isDebug() && !targetFilename.endsWith("_d"))
@@ -582,6 +585,7 @@ private:
         StringPairArray vars;
         StringPairArray extraDefinitions;
         StringArray extraIncludePaths;
+        Project& project = const_cast<CMakeProjectExporter*>(this)->getProject();
         auto projectFile = rebaseFromProjectFolderToBuildTarget (RelativePath (getProject().getFile().getFileName(), RelativePath::projectFolder));
   
         StringPairArray targetProperties;
@@ -589,6 +593,11 @@ private:
         ConstConfigIterator configIt(*this);
   
         String targetFilename, targetName = projectName;
+
+        targetProperties.set("LINKER_LANGUAGE", "CXX");
+
+        if(projectType.isAudioPlugin())
+          targetProperties.set("PREFIX", "\"\"");
   
         if (configIt.next())
         {
@@ -607,7 +616,7 @@ private:
         out << "cmake_minimum_required(VERSION 2.6)" << newLine;
         out << newLine;
   
-        out << "project(" << addQuotesIfContainsSpaces(projectName)  << ")" << newLine;
+        out << "project(" << addQuotesIfContainsSpaces(projectName)  << " LANGUAGES CXX)" << newLine;
         out << newLine;
 
         out << "add_custom_command(OUTPUT \"${CMAKE_SOURCE_DIR}/CMakeLists.txt\"" << newLine 
@@ -677,14 +686,22 @@ private:
   
         out << "# --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
         out << "if(UNIX)" << newLine;
-        writeIncludeFind(out, "X11", true);
-        out << newLine;
+        if(project.getModules().isModuleEnabled ("juce_gui_basics")) {
+            writeIncludeFind(out, "X11", true);
+            out << newLine;
+        }
   
         out << "  include(CheckLibraryExists)" << newLine;
 
-        writeLibraryCheck(out, "GL", "glXSwapBuffers");
+        if(project.getModules().isModuleEnabled ("juce_opengl"))
+            writeLibraryCheck(out, "GL", "glXSwapBuffers");
+
         writeLibraryCheck(out, "dl", "dlopen");
         writeLibraryCheck(out, "pthread", "pthread_create");
+
+        if(project.getModules().isModuleEnabled ("juce_audio_devices"))
+          //writeLibraryCheck(out, "asound", "snd_pcm_open");
+            writeIncludeFind(out, "ALSA", true);
   
         out << "endif()" << newLine;
         out << newLine;
@@ -694,7 +711,7 @@ private:
         writeIncludeFind(out, "Freetype", true);
         out << newLine;
   
-        if (getProject().isConfigFlagEnabled("JUCE_USE_CURL"))
+        if (project.isConfigFlagEnabled("JUCE_USE_CURL"))
         {
             out << "# --- Check for libcurl -------------" << newLine;
             writeIncludeFind(out, "CURL");
@@ -713,9 +730,9 @@ private:
         for(ConstConfigIterator config(*this); config.next();)
             writeConfig(out, *config, targetName, extraDefinitions, extraIncludePaths, targetProperties);
   
-        String libraryType = (projectType.isDynamicLibrary() && !targetName.startsWith("lib")) ? " MODULE" : "";
+        String libraryType = (projectType.isDynamicLibrary() && !targetName.startsWith("lib") || projectType.isAudioPlugin()) ? " MODULE" : "";
   
-        if(projectType.isStaticLibrary() || projectType.isDynamicLibrary())
+        if(isLibrary || projectType.isAudioPlugin())
             out << "add_library(" << addQuotesIfContainsSpaces(targetName) << libraryType;
         else
             out << "add_executable(" << addQuotesIfContainsSpaces(targetName);
@@ -727,16 +744,16 @@ private:
   
         StringArray propNames = targetProperties.getAllKeys();
   
+        out << "set_target_properties("  << addQuotesIfContainsSpaces(targetName) << " PROPERTIES" << newLine;
+
         for(int i = 0; i < propNames.size(); ++i)
         {
             auto key = propNames[i];
     
-            out << "set_target_properties("  << addQuotesIfContainsSpaces(targetName)
-                << " PROPERTIES " << key << " " << targetProperties[key].quoted() << ")"
-                << newLine;
+                out << "    " << key << " " << targetProperties[key].quoted() << newLine;
         }
   
-        out << newLine;
+        out << ")" << newLine;
     }
 
     //==============================================================================
