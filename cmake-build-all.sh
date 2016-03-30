@@ -3,16 +3,24 @@
 cmake_build_all() {
     MYNAME=`basename "$0" .sh`
 
-    INTROJUCER=$(ls -td */*/*/*/{*,*/*,*/*/*}Introjucer{,.exe} 2>/dev/null |head -n1)
-    : ${CXX="g++"}
-
-    HOST=`"$CXX" -dumpmachine`
-    IFS="
-"
     trap  'echo "SIGINT exit"; exit 1' INT TERM HUP
 
     exec 10>&2
 
+    IFS="
+"
+    if [ -z "$INTROJUCER" ]; then
+        if type Introjucer >/dev/null 2>/dev/null; then
+            INTROJUCER="Introjucer"
+        else 
+            INTROJUCER=$(ls -td */*/*/*/{*,*/*,*/*/*}Introjucer{,.exe} 2>/dev/null |head -n1)
+        fi
+    fi
+
+    : ${CXX="g++"}
+
+    HOST=`"$CXX" -dumpmachine`
+    
     add_args() {
       IFS=" $IFS"
       ARGS="${ARGS:+$ARGS }$*"
@@ -27,9 +35,27 @@ cmake_build_all() {
       set -x
       "$@")
     }
+    show_help() {
+        echo "Usage: ${MYNAME} [OPTIONS] <jucer-files|source-dirs>
+
+  -C, --clean     Clean all builds
+  -v, --verbose   Increase verbosity
+  -f, --force     Force rebuild
+  -j<N>           Build with parallel make processes
+  -G <GENERATOR>  CMake generator, one of:
+
+$(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    \1,p')
+
+  -D NAME=VALUE   Defines a variable to be passed to CMake
+  
+  NAME=VALUE      Defines a variable, valid names are: CONFIG, LINKAGE
+
+"
+    }
 
     while :; do 
       case "$1" in
+          -h | --help) show_help ; exit  ;;
         -C | --clean) CLEAN="true"; shift ;;
         -v | --verbose) : ${VERBOSE:=0}; VERBOSE=$((VERBOSE+1)); shift ;;
         -f | --force) FORCE="true"; shift ;;
@@ -43,7 +69,7 @@ cmake_build_all() {
 
     if [ "${VERBOSE:-0}" -gt 1 ]; then
 	dump_vars() { 
-	    O=; for V in ${@:-BUILDDIR BUILD_TYPE CLEAN CMAKEDIR CMAKELISTS CONFIG FILES FORCE GENERATOR IFS INTROJUCER LIBRARY LIBTYPE PROJECT SOURCEDIR VERBOSE}; do
+	    O=; for V in ${@:-BUILDDIR BUILD_TYPE CLEAN CMAKEDIR CMAKELISTS CONFIG FILES FORCE GENERATOR IFS INTROJUCER LIBRARY LINKAGE PROJECT SOURCEDIR VERBOSE}; do
 	       eval 'O="${O:+$O
 }$V=\"${'$V'}\""'
 	     done; echo "$O" >&10
@@ -92,9 +118,8 @@ cmake_build_all() {
 		    exec_cmd "${INTROJUCER:-Introjucer}" --add-exporter "CMake" "$PROJECT"
 	    fi
 
-		
-
             dump_vars FORCE CMAKELISTS PROJECT
+		
 	    if [ "$FORCE" = true -o ! -e "$CMAKELISTS" -o "$PROJECT" -nt "$CMAKELISTS" ]; then
 	      exec_cmd "${INTROJUCER:-Introjucer}" --resave "$PROJECT"
 	    fi
@@ -114,14 +139,14 @@ cmake_build_all() {
 	
 	
 	build_dir() {
-	    case "$BUILD_SHARED_LIBS" in
-		ON) LIBTYPE="shared" ;;
-		OFF) LIBTYPE="static" ;;
-	    esac
-	    case "$STATIC_LINK" in
-		OFF) LINKTYPE="shared" ;;
-		ON) LINKTYPE="static" ;;
-	    esac
+#	    case "$BUILD_SHARED_LIBS" in
+#		ON) LINKAGE="shared" ;;
+#		OFF) LINKAGE="static" ;;
+#	    esac
+#	    case "$STATIC_LINK" in
+#		OFF) LINKTYPE="shared" ;;
+#		ON) LINKTYPE="static" ;;
+#	    esac
 	    eval "BUILDDIR=$SUBDIR"
             WORKDIR="$CMAKEDIR/$BUILDDIR"
 
@@ -156,13 +181,18 @@ cmake_build_all() {
 	    build_dir
 	done"
 
+	SUBDIR='$BUILD_TYPE-$LINKAGE'
 	if [ "$LIBRARY" = true ]; then
-	  SUBDIR='$BUILD_TYPE-$LIBTYPE'
-	  CMD=" for BUILD_SHARED_LIBS in ON OFF; do $CMD; done"
+	  CMD="for LINKAGE in \${LINKAGE:-shared static}; do 
+                 case \$LINKAGE in
+                    shared) BUILD_SHARED_LIBS=ON ;; static) BUILD_SHARED_LIBS=OFF ;;
+                esac; $CMD; done"
           add_args '-DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
-        elif [ "$LIBRARY" != true ]; then
-          SUBDIR='$BUILD_TYPE-$LINKTYPE'
-	  CMD="for STATIC_LINK in OFF ON; do $CMD; done"
+        else 
+	  CMD="for LINKAGE in \${LINKAGE:-shared static}; do 
+                 case \$LINKAGE in
+                    shared) STATIC_LINK=OFF ;; static) STATIC_LINK=ON ;;
+                esac; $CMD; done"
 	  add_args '-DSTATIC_LINK=$STATIC_LINK'
         fi
          IFS="$IFS;,+ "
