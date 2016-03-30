@@ -481,6 +481,8 @@ private:
         writeCppFlags(out, config, extraDefs, extraIncPaths);
         writeLinkDirectories(out, config);
 
+        out << "  set(DBGSUFFIX \"" << (config.isDebug() ? "_d" : "") << "\")" << newLine;
+        
         out << "endif()" << newLine;
         out << newLine;
 
@@ -507,8 +509,10 @@ private:
 
         if (targetFilename != targetName)
         {
-            String key = /*String(isLibrary ? "LIBRARY_" : "") +*/ "OUTPUT_NAME_" + config.getName().toUpperCase();
-            targetProps.set(key, targetFilename);
+            //String key = "OUTPUT_NAME_" + config.getName().toUpperCase();
+            String key = "OUTPUT_NAME";
+            
+            targetProps.set(key, targetFilename + "${DBGSUFFIX}");
         }
 
         out << "# End of configuration: " << config.getName() << newLine;
