@@ -160,8 +160,8 @@ private:
         StringArray searchPaths (extraSearchPaths);
         searchPaths.addArray (config.getHeaderSearchPaths());
 
-        searchPaths.insert (0, "/usr/include/freetype2");
-        searchPaths.insert (0, "/usr/include");
+        out << " $(shell pkg-config --cflags freetype2)";
+//        searchPaths.insert (0, "/usr/include");
 
         searchPaths = getCleanedStringArray (searchPaths);
 
@@ -200,7 +200,7 @@ private:
             out << " -l" << mingwLibs[i];
 
         if (getProject().isConfigFlagEnabled ("JUCE_USE_CURL"))
-            out << " -lcurl";
+            out << " $(shell pkg-config --libs libcurl)";
 
         StringArray libraries;
         libraries.addTokens (getExternalLibrariesString(), ";", "\"'");
