@@ -9,6 +9,8 @@ cmake_build_all() {
     HOST=`"$CXX" -dumpmachine`
     IFS="
 "
+    trap  'echo "SIGINT exit"; exit 1' INT TERM HUP
+
     exec 10>&2
 
     add_args() {
@@ -29,17 +31,17 @@ cmake_build_all() {
     while :; do 
       case "$1" in
         -C | --clean) CLEAN="true"; shift ;;
-        -v | --verbose) VERBOSE="true"; shift ;;
+        -v | --verbose) : ${VERBOSE:=0}; VERBOSE=$((VERBOSE+1)); shift ;;
         -f | --force) FORCE="true"; shift ;;
         -j) PARALLEL="$2"; shift 2 ;; -j*)PARALLEL="${1#-j}"; shift ;;
 	-G) GENERATOR="$2"; shift 2 ;;
         -D) add_args "-D${2}"; shift 2 ;; -D*) add_args "$1"; shift ;;
-        *=*) CMD="${1%%=*}=\"${1#*=}\"";  [ "$VERBOSE" = true ] && echo  "$CMD" >&10; eval "$CMD"; shift ;;
+        *=*) CMD="${1%%=*}=\"${1#*=}\"";  [ "${VERBOSE:-0}" -gt 0 ] && echo  "$CMD" >&10; eval "$CMD"; shift ;;
 	*) break ;;
       esac
     done
 
-    if [ "$VERBOSE" = true ]; then
+    if [ "${VERBOSE:-0}" -gt 1 ]; then
 	dump_vars() { 
 	    O=; for V in ${@:-BUILDDIR BUILD_TYPE CLEAN CMAKEDIR CMAKELISTS CONFIG FILES FORCE GENERATOR IFS INTROJUCER LIBRARY LIBTYPE PROJECT SOURCEDIR VERBOSE}; do
 	       eval 'O="${O:+$O
@@ -56,7 +58,7 @@ cmake_build_all() {
       *) : ${GENERATOR="Unix Makefiles"} ;;
     esac
 
-    [ "$VERBOSE" = true ] && add_args '-DCMAKE_VERBOSE_MAKEFILE=TRUE'
+    [ "${VERBOSE:-0}" -gt 1 ] && add_args '-DCMAKE_VERBOSE_MAKEFILE=TRUE'
     add_args '${GENERATOR:+-G "$GENERATOR"}'
     add_args '-DCONFIG="${BUILD_TYPE}"'
 
@@ -73,7 +75,7 @@ cmake_build_all() {
     done
     set -- $FILES
 
-    [ "$VERBOSE" = true ] && echo "Projects: $*" >&10
+    [ "${VERBOSE:-0}" -gt 0 ] && echo "Projects: $*" >&10
 
     for PROJECT; do
 
