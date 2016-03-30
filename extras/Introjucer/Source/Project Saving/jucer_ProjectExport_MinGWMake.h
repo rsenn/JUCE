@@ -41,10 +41,14 @@ public:
     //==============================================================================
     MinGWProjectExporter (Project& p, const ValueTree& t)   : ProjectExporter (p, t)
     {
+	const char* libs[] = { "comdlg32", "gdi32", "gdiplus", "imm32", "ole32", "oleaut32", "shell32", "shlwapi", "uuid", "version", "wininet", "winmm", "ws2_32", "wsock32", nullptr };
+
         name = getName();
 
         if (getTargetLocationString().isEmpty())
             getTargetLocationValue() = getDefaultBuildsRootFolder() + "MinGW";
+
+	mingwLibs = StringArray(libs);
 
         initialiseDependencyPathValues();
     }
@@ -95,7 +99,8 @@ protected:
         MinGWBuildConfiguration (Project& p, const ValueTree& settings, const ProjectExporter& e)
             : BuildConfiguration (p, settings, e)
         {
-            setValueIfVoid (getLibrarySearchPathValue(), "/usr/X11R6/lib/");
+            //setValueIfVoid (getLibrarySearchPathValue(), "/usr/X11R6/lib/");
+//	    setValueIfVoid (getExternalLibraries() , "-loleaut32 -lole32 -lversion -limm32 -lws2_32 -lwsock32 -lgdi32 -lgdiplus -lshell32 -lshlwapi -lwininet -lwinmm -luuid -lcomdlg32");
         }
 
        Value getArchitectureType()             { return getValue (Ids::winArchitecture); }
