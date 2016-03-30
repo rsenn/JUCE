@@ -246,7 +246,7 @@ private:
     }
 
     //==============================================================================
-    static void writeDefineFlags(OutputStream& out, const BuildConfiguration& config,
+    static void writeAddDefinitions(OutputStream& out, const BuildConfiguration& config,
                                  const StringPairArray& extraDefs)
     {
         StringPairArray defines(extraDefs);
@@ -266,32 +266,16 @@ private:
     }
 
     //==============================================================================
-    void writeHeaderPathFlags(OutputStream& out, const BuildConfiguration& config,
-                              const StringArray& extraIncPaths) const
+    static void writeIncludeDirectories(OutputStream& out, const StringArray& searchPaths) 
     {
-        StringArray searchPaths(extraSearchPaths);
-
-        searchPaths.add(RelativePath(project.getGeneratedCodeFolder(), getTargetFolder(),
-                                     RelativePath::buildTargetFolder).toUnixStyle());
-
-        searchPaths.addArray(config.getHeaderSearchPaths());
-        searchPaths.addArray(extraIncPaths);
-
-        /*
-        searchPaths.insert(0, "${FREETYPE_INCLUDE_DIRS}");
-        searchPaths.insert(0, "${FREETYPE_INCLUDE_DIR_ft2build}");
-         */
-        searchPaths = getCleanedStringArray(searchPaths);
-
         out << "  include_directories(" << newLine;
-        writePathList(out, config, searchPaths, "  ");
+        writePathList(out, getCleanedStringArray(searchPaths), "  ");
         out << ")" << newLine;
     }
 
     //==============================================================================
-    void writePathList(OutputStream& out, const BuildConfiguration& config,
-                       const StringArray& list,
-                       const String& indent = "") const
+    static void writePathList(OutputStream& out, const StringArray& list,
+                       const String& indent = "") 
     {
         out << indent;
 
@@ -305,10 +289,10 @@ private:
 
     //==============================================================================
     void writeCppFlags(OutputStream& out, const BuildConfiguration& config,
-                   StringPairArray& extraDefs, StringArray& extraIncPaths) const
+                       StringPairArray& extraDefs) const
     {
-        writeDefineFlags(out, config, extraDefs);
-        writeHeaderPathFlags(out, config, extraIncPaths);
+        writeAddDefinitions(out, config, extraDefs);
+        writeIncludeDirectories(out, config.getHeaderSearchPaths());
     }
 
     //==============================================================================
@@ -480,16 +464,17 @@ private:
         if(fileName.endsWith(".so"))
             fileName = fileName.substring(0, fileName.length() - 3);
 
-        if (!config.isDebug() && fileName.endsWith("_d"))
+/*        if (!config.isDebug() && fileName.endsWith("_d"))
             fileName = fileName.substring(0, fileName.length() - 2);
         else if(config.isDebug() && !fileName.endsWith("_d"))
-            fileName = fileName + "_d";
-            return fileName;
-       }
+            fileName = fileName + "_d";*/
+         
+        return fileName;
+    }
 
     //==============================================================================
     void writeConfig(OutputStream& out, const BuildConfiguration& config, const String& targetName,
-                     StringPairArray& extraDefs, StringArray& extraIncPaths, StringPairArray& targetProps) const
+                     StringPairArray& extraDefs, StringPairArray& targetProps) const
     {
      //   bool isLibrary = (projectType.isStaticLibrary() || projectType.isDynamicLibrary());
         const String buildDirName("build");
@@ -505,9 +490,9 @@ private:
             outputDir = binaryPath.rebased(projectFolder, getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle();
         }
 
-        out << "if(CMAKE_BUILD_TYPE STREQUAL " << config.getName().quoted() << ")" << newLine;
+        out << "if(CMAKE_BUILD_TYPE MATCHES " << config.getName().quoted() << ")" << newLine;
 
-        writeCppFlags(out, config, extraDefs, extraIncPaths);
+        writeCppFlags(out, config, extraDefs);
         writeLinkDirectories(out, config);
         
         out << "endif()" << newLine;
@@ -647,7 +632,7 @@ private:
         bool isLibrary = (projectType.isStaticLibrary() || projectType.isDynamicLibrary());
         StringPairArray vars;
         StringPairArray extraDefinitions;
-        StringArray extraIncludePaths;
+        StringArray includeDirs;
          String libraryType, buildType;
         RelativePath projectFile = rebaseFromProjectFolderToBuildTarget (RelativePath (getProject().getFile().getFileName(), RelativePath::projectFolder));
   
@@ -672,7 +657,7 @@ private:
 
         targetName = targetName.replace(" ", "_");
   
-        libraryType = (projectType.isDynamicLibrary() && !targetName.startsWith("lib") || projectType.isAudioPlugin()) ? " MODULE" : "";
+        libraryType = ((projectType.isDynamicLibrary() && !targetName.startsWith("lib")) || projectType.isAudioPlugin()) ? " MODULE" : "";
         buildType = isLibrary ? libraryType : "EXE";
         
         out << "# Automatically generated CMakeLists.txt, created by the Introjucer" << newLine
@@ -727,15 +712,20 @@ private:
             << "    add_definitions(-D_WINDOWS=1)" << newLine
             << "  elseif(MINGW)" << newLine
             << "    add_definitions(-D__MINGW__=1)" << newLine
-/*            << "  elseif(MSYS)" << newLine
-            << "    add_definitions(-D__MSYS__=1)" << newLine*/
+            << "  else()" << newLine
+            << "    get_property(WIN64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)" << newLine
+            << "    if(WIN64)" << newLine
+            << "      add_definitions(-D_WIN64=1)" << newLine
+            << "    else()" << newLine
+            << "      add_definitions(-D_WIN32=1)" << newLine
+            << "    endif()" << newLine
             << "  endif()" << newLine
             << "elseif(UNIX)" << newLine
             << "  add_definitions(-DLINUX=1)" << newLine
             << "endif()" << newLine;
         out << newLine;
   
-        vars = getDefaultVars(extraDefinitions, extraIncludePaths);
+        vars = getDefaultVars(extraDefinitions, includeDirs);
         
         if (isLibrary) {
             out << "if(NOT DEFINED BUILD_SHARED_LIBS)" << newLine;
@@ -803,8 +793,14 @@ private:
             << "endif()" << newLine;
         out << newLine;
 
+        
+       includeDirs.add(RelativePath(project.getGeneratedCodeFolder(), getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle());
+       includeDirs.addArray(extraSearchPaths);
+       
+       writeIncludeDirectories(includeDirs);
+        
         for(ConstConfigIterator config(*this); config.next();)
-            writeConfig(out, *config, targetName, extraDefinitions, extraIncludePaths, targetProperties);
+            writeConfig(out, *config, targetName, extraDefinitions,  targetProperties);
    
         if(isLibrary || projectType.isAudioPlugin())
             out << "add_library(" << addQuotesIfContainsSpaces(targetName) << libraryType;
