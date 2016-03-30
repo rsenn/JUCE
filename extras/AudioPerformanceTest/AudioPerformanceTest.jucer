@@ -100,7 +100,9 @@
                    androidKeyAlias="androiddebugkey" androidKeyAliasPass="android"
                    androidCpp11="1" androidScreenOrientation="unspecified" targetFolder="Builds/AndroidStudio"
                    androidSDKPath="" androidNDKPath="" extraCompilerFlags="-mfpu=neon -mfloat-abi=hard -ffast-math -funroll-loops --param max-unroll-times=8 -mhard-float -D_NDK_MATH_NO_SOFTFP=1 -DJUCE_DISABLE_ASSERTIONS=1"
-                   extraDefs="" extraLinkerFlags="" externalLibraries="">
+                   extraDefs="" extraLinkerFlags="" externalLibraries="" gradleVersion="2.10"
+                   gradleWrapperVersion="0.6.0-beta5" gradleToolchain="clang" gradleToolchainVersion="3.6"
+                   buildToolsVersion="23.0.1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" androidArchitectures="arm64-v8a" isDebug="1" optimisation="1"
                        targetName="AudioPerformanceTest"/>
@@ -121,6 +123,27 @@
         <MODULEPATH id="juce_audio_utils" path="../../modules"/>
       </MODULEPATHS>
     </ANDROIDSTUDIO>
+    <CMAKE targetFolder="Builds/CMake">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" libraryPath="${CMAKE_SYSTEM_LIBRARY_PATH}" isDebug="1"
+                       optimisation="1" targetName="AudioPerformanceTest"/>
+        <CONFIGURATION name="Release" libraryPath="${CMAKE_SYSTEM_LIBRARY_PATH}" isDebug="0"
+                       optimisation="3" targetName="AudioPerformanceTest"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_gui_extra" path="../../modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../modules"/>
+        <MODULEPATH id="juce_graphics" path="../../modules"/>
+        <MODULEPATH id="juce_events" path="../../modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../modules"/>
+        <MODULEPATH id="juce_core" path="../../modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../modules"/>
+      </MODULEPATHS>
+    </CMAKE>
   </EXPORTFORMATS>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0"/>

@@ -44,6 +44,17 @@
         <MODULEPATH id="juce_core" path="../../modules"/>
       </MODULEPATHS>
     </VS2010>
+    <CMAKE targetFolder="Builds/CMake">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" libraryPath="${CMAKE_SYSTEM_LIBRARY_PATH}" isDebug="1"
+                       optimisation="1" targetName="BinaryBuilder"/>
+        <CONFIGURATION name="Release" libraryPath="${CMAKE_SYSTEM_LIBRARY_PATH}" isDebug="0"
+                       optimisation="3" targetName="BinaryBuilder"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_core" path="../../modules"/>
+      </MODULEPATHS>
+    </CMAKE>
   </EXPORTFORMATS>
   <MAINGROUP id="TTBP5JihO" name="BinaryBuilder">
     <GROUP id="noYkBuTg" name="Source">

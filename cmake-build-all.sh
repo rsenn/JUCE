@@ -31,6 +31,7 @@ cmake_build_all() {
         -C | --clean) CLEAN="true"; shift ;;
         -v | --verbose) VERBOSE="true"; shift ;;
         -f | --force) FORCE="true"; shift ;;
+        -j) PARALLEL="$2"; shift 2 ;; -j*)PARALLEL="${1#-j}"; shift ;;
 	-G) GENERATOR="$2"; shift 2 ;;
         -D) add_args "-D${2}"; shift 2 ;; -D*) add_args "$1"; shift ;;
         *=*) CMD="${1%%=*}=\"${1#*=}\"";  [ "$VERBOSE" = true ] && echo  "$CMD" >&10; eval "$CMD"; shift ;;
