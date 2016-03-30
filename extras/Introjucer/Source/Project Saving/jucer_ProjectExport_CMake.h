@@ -767,9 +767,10 @@ private:
             out << "endif()" << newLine;
             out << newLine;
             
-            targetProperties.set("PREFIX", "0.0");
-            targetProperties.set("VERSION", "0.0");
+            targetProperties.set("PREFIX", "");
         }
+        
+        targetProperties.set(String(isLibrary ? "SO" : "") + "VERSION", "0.0");
   
         writeLinuxChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
         writeWindowsChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
