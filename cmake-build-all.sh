@@ -23,14 +23,13 @@ cmake_build_all() {
     }
     change_dir() {
       echo "Entering $1 ..." 1>&10
-      cd "$1"
+      pushd "$1"
     }
     exec_cmd() {
-     ( exec  2>&10;set -x
+     ( exec  2>&10;
       #echo "+ $@" >&10; 
       [ "$QUIET" = true ] && exec >/dev/null
-
-      "$@" 2>&1 )
+     set -x; "$@" 2>&1 )
     }
     show_help() {
         echo "Usage: ${MYNAME} [OPTIONS] <jucer-files|source-dirs>
@@ -125,7 +124,7 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
 	grep -q 'projectType="library"' "$PROJECT" && LIBRARY=true || LIBRARY=false
 	grep -qi 'install\s*('  "$PROJECT" && INSTALLABLE=true || INSTALLABLE=false
 
-       (SOURCEDIR=`dirname "$PROJECT"`
+      { SOURCEDIR=`dirname "$PROJECT"`
         CMAKEDIR="$SOURCEDIR/Builds/CMake"
 	CMAKELISTS="$CMAKEDIR/CMakeLists.txt"
 	
@@ -160,7 +159,7 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
             dump_vars BUILDDIR  WORKDIR
 
             # --- configure --------------
-	   (change_dir "$WORKDIR";  eval "exec_cmd \$CMAKE $ARGS ..")
+	   change_dir "$WORKDIR";  eval "exec_cmd \$CMAKE $ARGS .."; popd
 
 <<<<<<< 184266e3c26e959bf61a9741f2b41572ed615708
             # --- build ------------------
@@ -202,7 +201,7 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
 	  add_args '-DSTATIC_LINK=$STATIC_LINK'
         fi
          IFS="$IFS;,+ "
-	eval "$CMD") || { echo "Failed! ($?)" >&10; break; }
+	eval "$CMD"; } || { echo "Failed! ($?)" >&10; break; }
     done 2>&1 | tee "$MYNAME.log"
 }
 
