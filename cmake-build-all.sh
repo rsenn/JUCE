@@ -1,52 +1,113 @@
 #!/bin/sh
 
-MYNAME=`basename "$0" .sh`
 
-[ $# -le 0 ] && set -- */*/*.jucer */*/*/*.jucer
+cmake_build_all() {
+    MYNAME=`basename "$0" .sh`
 
-for PROJECT; do
+    INTROJUCER=$(ls -td */*/*/*/{*,*/*,*/*/*}Introjucer{,.exe} 2>/dev/null |head -n1)
+    : ${CXX="g++"}
 
-    SOURCEDIR=`dirname "$PROJECT"`
-    if grep -q 'projectType="library"' "$PROJECT"; then
-        LIBRARY=true
-    else
-        LIBRARY=false
-    fi
+    HOST=`"$CXX" -dumpmachine`
+    IFS="
+    "
+    while :; do 
+      case "$1" in
+	-G) GENERATOR="$2"; shift 2 ;;
+	*) break ;;
+      esac
+    done
 
-   (Introjucer --resave "$PROJECT"
-    Introjucer --add-exporter "CMake" "$PROJECT"
+    case "$HOST":`type -p /bin/sh` in
+      *mingw32:/bin/sh | *msys:*) : ${GENERATOR="MSYS Makefiles"} ;;
+      *mingw32:*) : ${GENERATOR="MinGW Makefiles"} ;;
+      *) : ${GENERATOR="Unix Makefiles"} ;;
+    esac
 
-    cd "$SOURCEDIR"
-    rm -rf $(ls -d Builds/CMake/*|grep -v Lists.txt$ )
-    
+    exec 10>&2
 
-    build_dir() {
-        case "$BUILD_SHARED_LIBS" in
-            ON) LIBTYPE=Shared ;;
-            OFF) LIBTYPE=Static ;;
-        esac
-        eval "BUILDDIR=$BUILDDIR"
-
-        mkdir -p "Builds/CMake/$BUILDDIR"
-
-       (cd Builds/CMake/$BUILDDIR
-        eval "\${CMAKE-cmake} $ARGS" .. 2>&1  |tee cmake.log
-        make)
+    add_args() {
+      IFS=" $IFS"
+      ARGS="${ARGS:+$ARGS }$*"
+      IFS="${IFS#?}"
+    }
+    change_dir() {
+      echo "Entering $1 ..." 1>&10
+      cd "$1"
     }
 
-    CMD='for CONFIG in Debug Release; do
-        build_dir
-    done'
+    add_args '${GENERATOR:+-G${IFS}"$GENERATOR"}'
+    add_args '-DCMAKE_VERBOSE_MAKEFILE=TRUE'
 
+    [ $# -le 0 ] && set -- */*/*.jucer */*/*/*.jucer
 
-    if [ "$LIBRARY" = true ]; then
-      ARGS='-DCMAKE_VERBOSE_MAKEFILE=TRUE -DCONFIG=$CONFIG -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
-      BUILDDIR='$CONFIG-$LIBTYPE'
-      CMD=" for BUILD_SHARED_LIBS in ON OFF; do $CMD; done"
-    else
-      ARGS='-DCMAKE_VERBOSE_MAKEFILE=TRUE -DCONFIG=$CONFIG' 
-      BUILDDIR='$CONFIG'
-    fi
+    FILES=
 
-    eval "$CMD")
-done 2>&1 | tee "$MYNAME.log"
+    while [ $# -gt 0 ]; do
+      F="${1%/}"; shift
+      if [ -d "$F" ]; then
+	set -- "$F"/*.jucer "$@"
+	continue
+      fi
+      FILES="${FILES:+$FILES$IFS}$F"
+    done
+    set -- $FILES
+
+    for PROJECT; do
+
+	SOURCEDIR=`dirname "$PROJECT"`
+	if grep -q 'projectType="library"' "$PROJECT"; then
+	    LIBRARY=true
+	else
+	    LIBRARY=false
+	fi
+
+       (CMAKEBLDIR="Builds/CMake"
+	CMAKELISTS="$CMAKEBLDIR/CMakeLists.txt"
+	
+	    if ! grep -q "<CMAKE" "$PROJECT"; then    
+		    (set -x; "${INTROJUCER:-Introjucer}" --add-exporter "CMake" "$PROJECT")
+	    fi
+	    
+	if [ ! -e "$CMAKELISTS" -o "$PROJECT" -nt "$CMAKELISTS" ]; then
+	  (set -x; "${INTROJUCER:-Introjucer}" --resave "$PROJECT")
+	fi
+
+	set -e
+	change_dir "$SOURCEDIR"
+	
+	set --  `ls -d "$CMAKEBLDIR"/* | grep -v "$CMAKELISTS\$"`
+	[ $# -gt 0 ] && rm -rf -- "$@" >&10
+
+	[ "$LIBRARY" = true ] && 
+	    add_args '-DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
+
+	build_dir() {
+	    case "$BUILD_SHARED_LIBS" in
+		ON) LIBTYPE="shared" ;;
+		OFF) LIBTYPE="static" ;;
+	    esac
+	    eval "BUILDDIR=$BUILDDIR"
+
+	    mkdir -p "$CMAKEBLDIR/$BUILDDIR"
+
+	   (cd $CMAKEBLDIR/$BUILDDIR
+	    eval "(set -x; \${CMAKE-cmake} $ARGS ..)" 2>&1  |tee cmake.log
+	    make)
+	}
+
+	CMD='for CONFIG in Debug Release; do
+	    build_dir
+	done'
+
+	if [ "$LIBRARY" = true ]; then
+	  BUILDDIR='$CONFIG-$LIBTYPE'
+	  CMD=" for BUILD_SHARED_LIBS in ON OFF; do $CMD; done"
+	else
+	  BUILDDIR='$CONFIG'
+	fi
+
+	eval "$CMD")
+    done 2>&1 | tee "$MYNAME.log"
+}
+
+cmake_build_all "$@"
