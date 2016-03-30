@@ -644,15 +644,19 @@ private:
     //==============================================================================
     void writeLinuxChecks(OutputStream& out, Project& proj) const
     {
+        StringArray libs = linuxLibs;
+        
         out << "elseif(UNIX)" << newLine;
         out << "  # --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
+        out << "  include(CheckLibraryExists)" << newLine;
         if(proj.getModules().isModuleEnabled ("juce_gui_basics")) {
             writeIncludeFind(out, "X11", true);
             out << newLine;
-        }
-  
-        out << "  include(CheckLibraryExists)" << newLine;
 
+            libs.add("${X11_ICE_LIB}");
+            libs.add("${X11_SM_LIB}");
+        }
+ 
         if(proj.getModules().isModuleEnabled ("juce_opengl"))
             writeLibraryCheck(out, "GL", "glXSwapBuffers");
 
@@ -662,8 +666,8 @@ private:
         if(proj.getModules().isModuleEnabled ("juce_audio_devices"))
           //writeLibraryCheck(out, "asound", "snd_pcm_open");
            writeIncludeFind(out, "ALSA", true);
-  
-        writeLinkLibraries(out, linuxLibs);
+ 
+        writeLinkLibraries(out, libs);
 
         out << "endif()" << newLine;
         out << newLine;
