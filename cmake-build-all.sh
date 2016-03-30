@@ -106,7 +106,7 @@ cmake_build_all() {
 	  BUILDDIR='$CONFIG'
 	fi
 
-	eval "$CMD")
+	eval "$CMD") || { echo "Failed! ($?)" >&10; break; }
     done 2>&1 | tee "$MYNAME.log"
 }
 
