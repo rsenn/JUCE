@@ -42,7 +42,7 @@ cmake_build_all() {
 	dump_vars() { 
 	    O=; for V in ${@:-BUILDDIR BUILD_TYPE CLEAN CMAKEDIR CMAKELISTS CONFIG FILES FORCE GENERATOR IFS INTROJUCER LIBRARY LIBTYPE PROJECT SOURCEDIR VERBOSE}; do
 	       eval 'O="${O:+$O
-    }$V=\"${'$V'}\""'
+}$V=\"${'$V'}\""'
 	     done; echo "$O" >&10
 	}
     else
@@ -81,8 +81,6 @@ cmake_build_all() {
 	else
 	    LIBRARY=false
 	fi
-
-
 
        (SOURCEDIR=`dirname "$PROJECT"`
         CMAKEDIR="$SOURCEDIR/Builds/CMake"
@@ -146,8 +144,6 @@ cmake_build_all() {
 	CMD="for BUILD_TYPE in ${CONFIG:-Debug Release}; do
 	    build_dir
 	done"
-
-
 
 	if [ "$LIBRARY" = true ]; then
 	  SUBDIR='$BUILD_TYPE-$LIBTYPE'
