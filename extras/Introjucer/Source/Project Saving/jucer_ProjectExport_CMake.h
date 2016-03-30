@@ -509,20 +509,17 @@ private:
 
         writeCppFlags(out, config, extraDefs, extraIncPaths);
         writeLinkDirectories(out, config);
-
-     //   out << "  set(DBGSUFFIX \"" << (config.isDebug() ? "_d" : "") << "\")" << newLine;
         
         out << "endif()" << newLine;
-        out << newLine;
+       /* out << newLine;
         out << "set(TARGET_NAME_" << config.getName().toUpperCase() << " \"" << targetFileName << "\")" << newLine;
-
+        */
         
-        if(config.isDebug()) {
+        if(config.isDebug())
             targetProps.set("DEBUG_POSTFIX", "_d");
-        }
+
         if (targetFileName != targetName)
         {
-            //String key = "OUTPUT_NAME_" + config.getName().toUpperCase();
             String key = "OUTPUT_NAME";
             
             targetProps.set(key, targetFileName);
@@ -712,10 +709,12 @@ private:
             out << newLine;
         }
   
-        //out << "if(DEFINED CONFIG)" << newLine
-        out << "  set(CMAKE_BUILD_TYPE \"${CONFIG}\")" << newLine;
-        //out << "endif()" << newLine;
-        out << newLine;
+        out << "if(DEFINED CONFIG)" << newLine
+            << "  set(CMAKE_BUILD_TYPE \"${CONFIG}\")" << newLine
+            << "else()" << newLine
+            << "  set(CMAKE_BUILD_TYPE \"Debug;Release\")" << newLine
+            << "endif()" << newLine
+            << newLine;
 
         out << "if(NOT CMAKE_BUILD_TYPE)" << newLine
             << "  set(CMAKE_BUILD_TYPE " << escapeSpaces(getConfiguration(0)->getName()) << ")" << newLine
@@ -762,13 +761,14 @@ private:
             out << "get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)" << newLine;
             out << newLine;
             out << "if(\"${LIB64}\" STREQUAL \"TRUE\")" << newLine;
-            out << "  set(LIBSUFFIX 64)" << newLine;
+            out << "  set(LIB_PATH_NAME lib64)" << newLine;
             out << "else()" << newLine;
-            out << "  set(LIBSUFFIX \"\")" << newLine;
+            out << "  set(LIB_PATH_NAME lib)" << newLine;
             out << "endif()" << newLine;
             out << newLine;
             
-            targetProperties.set("SOVERSION", "0.0.0");
+            targetProperties.set("PREFIX", "0.0");
+            targetProperties.set("VERSION", "0.0");
         }
   
         writeLinuxChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
@@ -839,7 +839,7 @@ private:
             << "string(REGEX MATCH \".*[\\\\/][Jj][Uu][Cc][Ee][^/\\\\]*$\" INSTDIR \"${CMAKE_INSTALL_PREFIX}\")" << newLine;
             
         out << "if(INSTDIR STREQUAL \"\")"  << newLine
-            << "  set(INSTDIR \"${CMAKE_INSTALL_PREFIX}/" << (isLibrary ? "lib${LIBSUFFIX}" : "bin") << "\")"  << newLine
+            << "  set(INSTDIR \"${CMAKE_INSTALL_PREFIX}/" << (isLibrary ? "${LIB_PATH_NAME}" : "bin") << "\")"  << newLine
             << "endif()" << newLine;
         out << newLine;
         
