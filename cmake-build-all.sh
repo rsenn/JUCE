@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 cmake_build_all() {
     MYNAME=`basename "$0" .sh`
 
@@ -10,20 +9,6 @@ cmake_build_all() {
     HOST=`"$CXX" -dumpmachine`
     IFS="
 "
-    while :; do 
-      case "$1" in
-	-G) GENERATOR="$2"; shift 2 ;;
-        *=*) eval "${1%%=*}=\"\${1#*=}\""; shift ;;
-	*) break ;;
-      esac
-    done
-
-    case "$HOST":`type -p /bin/sh` in
-      *mingw32:/bin/sh | *msys:*) : ${GENERATOR="MSYS Makefiles"} ;;
-      *mingw32:*) : ${GENERATOR="MinGW Makefiles"} ;;
-      *) : ${GENERATOR="Unix Makefiles"} ;;
-    esac
-
     exec 10>&2
 
     add_args() {
@@ -35,15 +20,36 @@ cmake_build_all() {
       echo "Entering $1 ..." 1>&10
       cd "$1"
     }
+    exec_cmd() {
+     (exec  2>&10
+      set -x
+      "$@")
+    }
 
+    while :; do 
+      case "$1" in
+        -v | --verbose) VERBOSE="true"; shift ;;
+        -f | --force) FORCE="true"; shift ;;
+	-G) GENERATOR="$2"; shift 2 ;;
+        -D) add_args "-D${2}"; shift 2 ;; -D*) add_args "$1"; shift ;;
+        *=*) eval "${1%%=*}=\"\${1#*=}\""; shift ;;
+	*) break ;;
+      esac
+    done
+
+    case "$HOST":`type -p /bin/sh` in
+      *mingw32:/bin/sh | *msys:*) : ${GENERATOR="MSYS Makefiles"} ;;
+      *mingw32:*) : ${GENERATOR="MinGW Makefiles"} ;;
+      *) : ${GENERATOR="Unix Makefiles"} ;;
+    esac
+
+    [ "$VERBOSE" = true ] && add_args '-DCMAKE_VERBOSE_MAKEFILE=TRUE'
     add_args '${GENERATOR:+-G${IFS}"$GENERATOR"}'
-    add_args '-DCMAKE_VERBOSE_MAKEFILE=TRUE'
     add_args '-DCMAKE_BUILD_TYPE=${CONFIG}'
 
     [ $# -le 0 ] && set -- */*/*.jucer */*/*/*.jucer
 
     FILES=
-
     while [ $# -gt 0 ]; do
       F="${1%/}"; shift
       if [ -d "$F" ]; then
@@ -54,33 +60,39 @@ cmake_build_all() {
     done
     set -- $FILES
 
-    echo "Projects: $*" >&10
+    [ "$VERBOSE" = true ] && echo "Projects: $*" >&10
 
     for PROJECT; do
 
-	SOURCEDIR=`dirname "$PROJECT"`
 	if grep -q 'projectType="library"' "$PROJECT"; then
 	    LIBRARY=true
 	else
 	    LIBRARY=false
 	fi
 
-       (CMAKBLDDIR="Builds/CMake"
-	CMAKELISTS="$CMAKBLDDIR/CMakeLists.txt"
+       (SOURCEDIR=`dirname "$PROJECT"`
+        CMAKEDIR="$SOURCEDIR/Builds/CMake"
+	CMAKELISTS="$CMAKEDIR/CMakeLists.txt"
 	
-	    if ! grep -q "<CMAKE" "$PROJECT"; then    
-		    (set -x; "${INTROJUCER:-Introjucer}" --add-exporter "CMake" "$PROJECT")
-	    fi
+	if ! grep -q "<CMAKE" "$PROJECT"; then    
+		exec_cmd "${INTROJUCER:-Introjucer}" --add-exporter "CMake" "$PROJECT"
+	fi
+
+        [ "$VERBOSE" = true ] && {
+	    echo "PROJECT: $PROJECT" >&10
+	    echo "CMAKELISTS: $CMAKELISTS" >&10
+        }
 	    
-	if [ ! -e "$CMAKELISTS" -o "$PROJECT" -nt "$CMAKELISTS" ]; then
-	  (set -x; "${INTROJUCER:-Introjucer}" --resave "$PROJECT")
+	if [ "$FORCE" = true -o ! -e "$CMAKELISTS" -o "$PROJECT" -nt "$CMAKELISTS" ]; then
+	  exec_cmd "${INTROJUCER:-Introjucer}" --resave "$PROJECT"
 	fi
 
 	set -e
-	change_dir "$SOURCEDIR"
 	
-	set --  `ls -d "$CMAKBLDDIR"/* | grep -v "$CMAKELISTS\$"`
-  [ $# -gt 0 ] && (set -x; rm -rf -- "$@" 2>&10 >&10)
+        if [ "$FORCE" = true ]; then
+	    set -- `ls -d "$CMAKEDIR"/* | grep -v "$CMAKELISTS\$"`
+	    [ $# -gt 0 ] && exec_cmd rm -rf -- "$@" 
+	fi
 
 	[ "$LIBRARY" = true ] && 
 	    add_args '-DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
@@ -90,14 +102,12 @@ cmake_build_all() {
 		ON) LIBTYPE="shared" ;;
 		OFF) LIBTYPE="static" ;;
 	    esac
-	    eval "BUILDDIR=$BUILDDIR"
+	    eval "BUILDDIR=$SUBDIR"
 
-	    mkdir -p "$CMAKBLDDIR/$BUILDDIR"
+	    mkdir -p "$CMAKEDIR/$BUILDDIR"
 
-	   (
-	    eval "(set -x; cd '$CMAKBLDDIR/$BUILDDIR'; \${CMAKE-cmake} $ARGS ..)" 2>&1  |tee cmake.log
-	    make -C "$CMAKBLDDIR/$BUILDDIR"
-      )
+	   (eval "(change_dir '$CMAKEDIR/$BUILDDIR'; exec_cmd \${CMAKE-cmake} $ARGS ..)"
+	    exec_cmd make -C "$CMAKEDIR/$BUILDDIR")
 	}
 
 	CMD="for CONFIG in ${CONFIG:-Debug Release}; do
@@ -105,10 +115,10 @@ cmake_build_all() {
 	done"
 
 	if [ "$LIBRARY" = true ]; then
-	  BUILDDIR='$CONFIG-$LIBTYPE'
+	  SUBDIR='$CONFIG-$LIBTYPE'
 	  CMD=" for BUILD_SHARED_LIBS in ON OFF; do $CMD; done"
 	else
-	  BUILDDIR='$CONFIG'
+	  SUBDIR='$CONFIG'
 	fi
 
 	eval "$CMD") || { echo "Failed! ($?)" >&10; break; }
