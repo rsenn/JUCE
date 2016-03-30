@@ -139,20 +139,7 @@ public class JuceDemo   extends Activity
         }
     }
 
-    private native void androidRuntimePermissionsCallback (boolean permissionWasGranted, long ptrToCallback);
-
-    @Override
-    public void onRequestPermissionsResult (int permissionID, String permissions[], int[] grantResults)
-    {
-        boolean permissionsGranted = (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED);
-
-        if (! permissionsGranted)
-            Log.d ("JUCE", "onRequestPermissionsResult: runtime permission was DENIED: " + getAndroidPermissionName (permissionID));
-
-        Long ptrToCallback = permissionCallbackPtrMap.get (permissionID);
-        permissionCallbackPtrMap.remove (permissionID);
-        androidRuntimePermissionsCallback (permissionsGranted, ptrToCallback);
-    }
+    $$JuceAndroidRuntimePermissionsCode$$ // If you get an error here, you need to re-save your project with the introjucer!
 
     //==============================================================================
     public static class MidiPortID extends Object

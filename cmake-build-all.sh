@@ -28,15 +28,27 @@ cmake_build_all() {
 
     while :; do 
       case "$1" in
+        -C | --clean) CLEAN="true"; shift ;;
         -v | --verbose) VERBOSE="true"; shift ;;
         -f | --force) FORCE="true"; shift ;;
         -j) PARALLEL="$2"; shift 2 ;; -j*)PARALLEL="${1#-j}"; shift ;;
 	-G) GENERATOR="$2"; shift 2 ;;
         -D) add_args "-D${2}"; shift 2 ;; -D*) add_args "$1"; shift ;;
-        *=*) eval "${1%%=*}=\"\${1#*=}\""; shift ;;
+        *=*) CMD="${1%%=*}=\"${1#*=}\"";  [ "$VERBOSE" = true ] && echo  "$CMD" >&10; eval "$CMD"; shift ;;
 	*) break ;;
       esac
     done
+
+    if [ "$VERBOSE" = true ]; then
+	dump_vars() { 
+	    O=; for V in ${@:-BUILDDIR BUILD_TYPE CLEAN CMAKEDIR CMAKELISTS CONFIG FILES FORCE GENERATOR IFS INTROJUCER LIBRARY LIBTYPE PROJECT SOURCEDIR VERBOSE}; do
+	       eval 'O="${O:+$O
+    }$V=\"${'$V'}\""'
+	     done; echo "$O" >&10
+	}
+    else
+       dump_vars() { :; }
+    fi
 
     case "$HOST":`type -p /bin/sh` in
       *mingw32:/bin/sh | *msys:*) : ${GENERATOR="MSYS Makefiles"} ;;
@@ -45,8 +57,8 @@ cmake_build_all() {
     esac
 
     [ "$VERBOSE" = true ] && add_args '-DCMAKE_VERBOSE_MAKEFILE=TRUE'
-    add_args '${GENERATOR:+-G${IFS}"$GENERATOR"}'
-    add_args '-DCONFIG=${CONFIG}'
+    add_args '${GENERATOR:+-G "$GENERATOR"}'
+    add_args '-DCONFIG="${BUILD_TYPE}"'
 
     [ $# -le 0 ] && set -- */*/*.jucer */*/*/*.jucer
 
@@ -75,25 +87,29 @@ cmake_build_all() {
         CMAKEDIR="$SOURCEDIR/Builds/CMake"
 	CMAKELISTS="$CMAKEDIR/CMakeLists.txt"
 	
-	if ! grep -q "<CMAKE" "$PROJECT"; then    
-		exec_cmd "${INTROJUCER:-Introjucer}" --add-exporter "CMake" "$PROJECT"
-	fi
+        if [ "$CLEAN" != true ]; then
+	    if ! grep -q "<CMAKE" "$PROJECT"; then    
+		    exec_cmd "${INTROJUCER:-Introjucer}" --add-exporter "CMake" "$PROJECT"
+	    fi
 
-        [ "$VERBOSE" = true ] && {
-	    echo "PROJECT: $PROJECT" >&10
-	    echo "CMAKELISTS: $CMAKELISTS" >&10
-        }
-	    
-	if [ "$FORCE" = true -o ! -e "$CMAKELISTS" -o "$PROJECT" -nt "$CMAKELISTS" ]; then
-	  exec_cmd "${INTROJUCER:-Introjucer}" --resave "$PROJECT"
-	fi
+		
 
-	set -e
+            dump_vars FORCE CMAKELISTS PROJECT
+	    if [ "$FORCE" = true -o ! -e "$CMAKELISTS" -o "$PROJECT" -nt "$CMAKELISTS" ]; then
+	      exec_cmd "${INTROJUCER:-Introjucer}" --resave "$PROJECT"
+	    fi
+
+	    set -e
+	fi
 	
-        if [ "$FORCE" = true ]; then
+        dump_vars FORCE CLEAN LIBRARY BUILD_SHARED_LIBS 
+
+        if [ "$FORCE" = true -o "$CLEAN" = true ]; then
 	    set -- `ls -d "$CMAKEDIR"/* | grep -v "$CMAKELISTS\$"`
 	    [ $# -gt 0 ] && exec_cmd rm -rf -- "$@" 
 	fi
+
+        [ "$CLEAN" = true ] && exit 0
 
 	[ "$LIBRARY" = true ] && 
 	    add_args '-DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
@@ -104,24 +120,36 @@ cmake_build_all() {
 		OFF) LIBTYPE="static" ;;
 	    esac
 	    eval "BUILDDIR=$SUBDIR"
+            WORKDIR="$CMAKEDIR/$BUILDDIR"
 
-	    mkdir -p "$CMAKEDIR/$BUILDDIR"
+	    mkdir -p "$WORKDIR"
+            dump_vars BUILDDIR  WORKDIR
 
-	   (eval "(change_dir '$CMAKEDIR/$BUILDDIR'; exec_cmd \${CMAKE-cmake} $ARGS ..)"
-	    exec_cmd make ${PARALLEL:+-j$PARALLEL} -C "$CMAKEDIR/$BUILDDIR")
+            # --- configure --------------
+	   (change_dir "$WORKDIR";  eval "exec_cmd \${CMAKE-cmake} $ARGS ..")
+
+            # --- build ------------------
+            set make -C "$WORKDIR" 
+	    exec_cmd "$@"
+
+            # --- install ----------------
+            set -- "$@" install
+             [ -n "$DESTDIR" ] && set -- "$@" DESTDIR="$DESTDIR"
+
+	    exec_cmd "$@"
 	}
 
-	CMD="for CONFIG in ${CONFIG:-Release Debug}; do
+	CMD="for BUILD_TYPE in ${CONFIG:-Debug Release}; do
 	    build_dir
 	done"
 
 	if [ "$LIBRARY" = true ]; then
-	  SUBDIR='$CONFIG-$LIBTYPE'
+	  SUBDIR='$BUILD_TYPE-$LIBTYPE'
 	  CMD=" for BUILD_SHARED_LIBS in ON OFF; do $CMD; done"
 	else
-	  SUBDIR='$CONFIG'
+	  SUBDIR='$BUILD_TYPE'
 	fi
-
+         IFS="$IFS;,+ "
 	eval "$CMD") || { echo "Failed! ($?)" >&10; break; }
     done 2>&1 | tee "$MYNAME.log"
 }
