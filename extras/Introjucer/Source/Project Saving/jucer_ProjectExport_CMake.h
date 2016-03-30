@@ -452,7 +452,7 @@ private:
     StringPairArray getDefaultVars(OutputStream&out, StringPairArray& extraDefs, StringArray& extraIncludes) const
     {
         StringPairArray vars;
- StringArray defaultCompileFlags;
+	StringArray defaultCompileFlags;
 
 	extraIncludes.insert(0, 
 	    RelativePath(project.getGeneratedCodeFolder(), getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle()
