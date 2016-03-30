@@ -83,6 +83,8 @@ cmake_build_all() {
 	    LIBRARY=false
 	fi
 
+
+
        (SOURCEDIR=`dirname "$PROJECT"`
         CMAKEDIR="$SOURCEDIR/Builds/CMake"
 	CMAKELISTS="$CMAKEDIR/CMakeLists.txt"
@@ -111,13 +113,16 @@ cmake_build_all() {
 
         [ "$CLEAN" = true ] && exit 0
 
-	[ "$LIBRARY" = true ] && 
-	    add_args '-DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
-
+	
+	
 	build_dir() {
 	    case "$BUILD_SHARED_LIBS" in
 		ON) LIBTYPE="shared" ;;
 		OFF) LIBTYPE="static" ;;
+	    esac
+	    case "$STATIC_LINK" in
+		OFF) LINK_TYPE="shared" ;;
+		ON) LINK_TYPE="static" ;;
 	    esac
 	    eval "BUILDDIR=$SUBDIR"
             WORKDIR="$CMAKEDIR/$BUILDDIR"
@@ -151,12 +156,17 @@ cmake_build_all() {
 	    build_dir
 	done"
 
+
+
 	if [ "$LIBRARY" = true ]; then
 	  SUBDIR='$BUILD_TYPE-$LIBTYPE'
 	  CMD=" for BUILD_SHARED_LIBS in ON OFF; do $CMD; done"
-	else
-	  SUBDIR='$BUILD_TYPE'
-	fi
+          add_args '-DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
+        elif [ "$LIBRARY" != true ]; then
+          SUBDIR='$BUILD_TYPE-$LINKTYPE'
+	  CMD="for STATIC_LINK in OFF ON; do $CMD; done"
+	  add_args '-DSTATIC_LINK=$STATIC_LINK'
+        fi
          IFS="$IFS;,+ "
 	eval "$CMD") || { echo "Failed! ($?)" >&10; break; }
     done 2>&1 | tee "$MYNAME.log"
