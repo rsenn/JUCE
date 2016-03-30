@@ -866,7 +866,7 @@ private:
         
         out << "if(JUCE_LIBRARY)" << newLine
             << "  link_libraries(${JUCE_LIBRARY})" << newLine
-            << "  if(JUCE_LIBRARY MATCHES \"\\.dll\")" << newLine
+            << "  if(JUCE_LIBRARY MATCHES \"dll.a\")" << newLine
             << "    add_definitions(-DJUCE_DLL=1)" << newLine
             << "  endif()" << newLine
             << "else()" << newLine
