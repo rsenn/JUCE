@@ -124,8 +124,18 @@ cmake_build_all() {
 	    mkdir -p "$WORKDIR"
             dump_vars BUILDDIR  WORKDIR
 
+            # --- configure --------------
 	   (change_dir "$WORKDIR";  eval "exec_cmd \${CMAKE-cmake} $ARGS ..")
-	    exec_cmd make -C "$WORKDIR"
+
+            # --- build ------------------
+            set make -C "$WORKDIR" 
+	    exec_cmd "$@"
+
+            # --- install ----------------
+            set -- "$@" install
+             [ -n "$DESTDIR" ] && set -- "$@" DESTDIR="$DESTDIR"
+
+	    exec_cmd "$@"
 	}
 
 	CMD="for BUILD_TYPE in ${CONFIG:-Debug Release}; do
