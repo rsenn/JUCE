@@ -9,10 +9,11 @@ cmake_build_all() {
 
     HOST=`"$CXX" -dumpmachine`
     IFS="
-    "
+"
     while :; do 
       case "$1" in
 	-G) GENERATOR="$2"; shift 2 ;;
+        *=*) eval "${1%%=*}=\"\${1#*=}\""; shift ;;
 	*) break ;;
       esac
     done
@@ -37,6 +38,7 @@ cmake_build_all() {
 
     add_args '${GENERATOR:+-G${IFS}"$GENERATOR"}'
     add_args '-DCMAKE_VERBOSE_MAKEFILE=TRUE'
+    add_args '-DCMAKE_BUILD_TYPE=${CONFIG}'
 
     [ $# -le 0 ] && set -- */*/*.jucer */*/*/*.jucer
 
@@ -52,6 +54,8 @@ cmake_build_all() {
     done
     set -- $FILES
 
+    echo "Projects: $*" >&10
+
     for PROJECT; do
 
 	SOURCEDIR=`dirname "$PROJECT"`
@@ -61,8 +65,8 @@ cmake_build_all() {
 	    LIBRARY=false
 	fi
 
-       (CMAKEBLDIR="Builds/CMake"
-	CMAKELISTS="$CMAKEBLDIR/CMakeLists.txt"
+       (CMAKBLDDIR="Builds/CMake"
+	CMAKELISTS="$CMAKBLDDIR/CMakeLists.txt"
 	
 	    if ! grep -q "<CMAKE" "$PROJECT"; then    
 		    (set -x; "${INTROJUCER:-Introjucer}" --add-exporter "CMake" "$PROJECT")
@@ -75,8 +79,8 @@ cmake_build_all() {
 	set -e
 	change_dir "$SOURCEDIR"
 	
-	set --  `ls -d "$CMAKEBLDIR"/* | grep -v "$CMAKELISTS\$"`
-	[ $# -gt 0 ] && rm -rf -- "$@" >&10
+	set --  `ls -d "$CMAKBLDDIR"/* | grep -v "$CMAKELISTS\$"`
+  [ $# -gt 0 ] && (set -x; rm -rf -- "$@" 2>&10 >&10)
 
 	[ "$LIBRARY" = true ] && 
 	    add_args '-DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
@@ -88,16 +92,17 @@ cmake_build_all() {
 	    esac
 	    eval "BUILDDIR=$BUILDDIR"
 
-	    mkdir -p "$CMAKEBLDIR/$BUILDDIR"
+	    mkdir -p "$CMAKBLDDIR/$BUILDDIR"
 
-	   (cd $CMAKEBLDIR/$BUILDDIR
-	    eval "(set -x; \${CMAKE-cmake} $ARGS ..)" 2>&1  |tee cmake.log
-	    make)
+	   (
+	    eval "(set -x; cd '$CMAKBLDDIR/$BUILDDIR'; \${CMAKE-cmake} $ARGS ..)" 2>&1  |tee cmake.log
+	    make -C "$CMAKBLDDIR/$BUILDDIR"
+      )
 	}
 
-	CMD='for CONFIG in Debug Release; do
+	CMD="for CONFIG in ${CONFIG:-Debug Release}; do
 	    build_dir
-	done'
+	done"
 
 	if [ "$LIBRARY" = true ]; then
 	  BUILDDIR='$CONFIG-$LIBTYPE'
