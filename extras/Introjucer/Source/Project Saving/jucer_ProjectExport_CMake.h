@@ -230,7 +230,7 @@ private:
         }
         else
         {
-            const auto& f = projectItem.getFile();
+            const File& f = projectItem.getFile();
 
             if (projectItem.shouldBeCompiled() ||  f.hasFileExtension (headerFileExtensions)) {
                 if(!projectItem.shouldBeAddedToBinaryResources()) {
@@ -246,8 +246,8 @@ private:
     }
 
     //==============================================================================
-    void writeDefineFlags(OutputStream& out, const BuildConfiguration& config,
-                          const StringPairArray& extraDefs) const
+    static void writeDefineFlags(OutputStream& out, const BuildConfiguration& config,
+                                 const StringPairArray& extraDefs)
     {
         StringPairArray defines(extraDefs);
 
@@ -338,10 +338,12 @@ private:
     //==============================================================================
     void writeLinkDirectories(OutputStream& out, const BuildConfiguration& config) const
     {
-        StringArray libraryDirs;
+        StringArray libraryDirs, libraryPathFlags = StringArray::fromTokens(config.getGCCLibraryPathFlags(), " ;", "\"'");
 
-        for (const String& s : StringArray::fromTokens(config.getGCCLibraryPathFlags(), " ;", "\"'"))
+        for (int i = 0; i < libraryPathFlags.size(); ++i)
         {
+			const String& s = libraryPathFlags[i];
+
             if (s.startsWith("-L"))
                 libraryDirs.add(s.substring(2).quoted());
         }
@@ -439,7 +441,7 @@ private:
                     {
                         //compileFlags.add(t);
 
-                        auto def = StringArray::fromTokens(arg.unquoted(), "=" , "\"");
+                        StringArray def = StringArray::fromTokens(arg.unquoted(), "=" , "\"");
 
                         extraDefs.set(def[0], def[1].unquoted());
                         continue;
@@ -531,7 +533,7 @@ private:
 
         for (int i = 0; i < files.size(); ++i)
         {
-            const auto& f = files.getReference(i);
+            const RelativePath& f = files.getReference(i);
 
             if (shouldFileBeCompiledByDefault(f) || f.hasFileExtension(headerFileExtensions))
                 out << "    " << addQuotesIfContainsSpaces(files.getReference(i).toUnixStyle()) << newLine ;
@@ -577,24 +579,24 @@ private:
         }
         
     //==============================================================================
-    void writeLinuxChecks(OutputStream& out, Project& project) const
+    void writeLinuxChecks(OutputStream& out, Project& proj) const
     {
         out << "if(UNIX)" << newLine;
         out << "  # --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
-        if(project.getModules().isModuleEnabled ("juce_gui_basics")) {
+        if(proj.getModules().isModuleEnabled ("juce_gui_basics")) {
             writeIncludeFind(out, "X11", true);
             out << newLine;
         }
   
         out << "  include(CheckLibraryExists)" << newLine;
 
-        if(project.getModules().isModuleEnabled ("juce_opengl"))
+        if(proj.getModules().isModuleEnabled ("juce_opengl"))
             writeLibraryCheck(out, "GL", "glXSwapBuffers");
 
         writeLibraryCheck(out, "dl", "dlopen");
         writeLibraryCheck(out, "pthread", "pthread_create");
 
-        if(project.getModules().isModuleEnabled ("juce_audio_devices"))
+        if(proj.getModules().isModuleEnabled ("juce_audio_devices"))
           //writeLibraryCheck(out, "asound", "snd_pcm_open");
            writeIncludeFind(out, "ALSA", true);
   
@@ -605,33 +607,27 @@ private:
     }
 
     //==============================================================================
-    void writeWindowsChecks(OutputStream& out, Project& project)  const
+    void writeWindowsChecks(OutputStream& out, Project& proj)  const
     {
         StringArray libs = mingwLibs;
         //StringArray libraries;
         out << "if(WIN32)" << newLine;
         out << "  # --- Add winsock, winmm and other required libraries on Windows systems -------------" << newLine;
 
-
-        if(project.getModules().isModuleEnabled ("juce_core")) {
+        if(proj.getModules().isModuleEnabled ("juce_core")) {
              libs.addIfNotAlreadyThere("ws2_32");
              libs.addIfNotAlreadyThere("wininet");
              libs.addIfNotAlreadyThere("winmm");
         }
-
-
-        
-        //out << "  include(CheckLibraryExists)" << newLine;
-
-
-        if(project.getModules().isModuleEnabled ("juce_gui_basics")) {
+       
+        if(proj.getModules().isModuleEnabled ("juce_gui_basics")) {
              libs.addIfNotAlreadyThere("imm32");
         }
   
-        if(project.getModules().isModuleEnabled ("juce_opengl"))
+        if(proj.getModules().isModuleEnabled ("juce_opengl"))
              libs.addIfNotAlreadyThere("opengl32");
 
-        if(project.getModules().isModuleEnabled ("juce_audio_devices"))
+        if(proj.getModules().isModuleEnabled ("juce_audio_devices"))
           libs.addIfNotAlreadyThere("winmm");
         
          writeLinkLibraries(out, libs);
@@ -649,7 +645,8 @@ private:
         StringPairArray vars;
         StringPairArray extraDefinitions;
         StringArray extraIncludePaths;
-        auto projectFile = rebaseFromProjectFolderToBuildTarget (RelativePath (getProject().getFile().getFileName(), RelativePath::projectFolder));
+         String libraryType, buildType;
+        RelativePath projectFile = rebaseFromProjectFolderToBuildTarget (RelativePath (getProject().getFile().getFileName(), RelativePath::projectFolder));
   
         StringPairArray targetProperties;
   
@@ -672,6 +669,9 @@ private:
 
         targetName = targetName.replace(" ", "_");
   
+        libraryType = (projectType.isDynamicLibrary() && !targetName.startsWith("lib") || projectType.isAudioPlugin()) ? " MODULE" : "";
+        buildType = isLibrary ? libraryType : "EXE";
+        
         out << "# Automatically generated CMakeLists.txt, created by the Introjucer" << newLine
             << "# Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!" << newLine
             << newLine;
@@ -689,10 +689,25 @@ private:
             << "    COMMENT \"Regenerating CMakeLists.txt from " << projectFile.getFileName() << "\"" << newLine
             << ")" << newLine;
         out << newLine;
-  
-        out << "if(DEFINED CONFIG)" << newLine
-            << "  set(CMAKE_BUILD_TYPE \"${CONFIG}\")" << newLine
+        
+        out << "if(NOT DEFINED CONFIG)" << newLine;
+        out << "  set(CONFIG \"Debug\" CACHE STRING \"Configuration, either Release or Debug\")" << newLine;
+        out << "endif()" << newLine;
+        out << newLine;
+
+        out << "set(STATIC OFF CACHE BOOL \"Build static " << (isLibrary ? "library" : "binary") << "\")" << newLine;
+        out << newLine;
+        
+        if(!isLibrary) {
+            out << "if(STATIC)" << newLine
+            << "  set(CMAKE_" << buildType << "_LINKER_FLAGS \"-static\")" << newLine
             << "endif()" << newLine;
+            out << newLine;
+        }
+  
+        //out << "if(DEFINED CONFIG)" << newLine
+        out << "  set(CMAKE_BUILD_TYPE \"${CONFIG}\")" << newLine;
+        //out << "endif()" << newLine;
         out << newLine;
 
         out << "if(NOT CMAKE_BUILD_TYPE)" << newLine
@@ -745,13 +760,15 @@ private:
             out << "  set(LIBSUFFIX \"\")" << newLine;
             out << "endif()" << newLine;
             out << newLine;
+            
+            targetProperties.set("SOVERSION", "0.0.0");
         }
   
         writeLinuxChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
         writeWindowsChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
 
         out << "# --- Check for Freetype library -------------" << newLine;
-        writeIncludeFind(out, "Freetype", true);
+        writeIncludeFind(out, "Freetype", false);
         out << newLine;
 
         if (project.isConfigFlagEnabled("JUCE_USE_CURL"))
@@ -760,7 +777,6 @@ private:
             writeIncludeFind(out, "CURL");
             out << newLine;
         }
-  
   
         out << newLine;
 
@@ -771,8 +787,7 @@ private:
         for(ConstConfigIterator config(*this); config.next();)
             writeConfig(out, *config, targetName, extraDefinitions, extraIncludePaths, targetProperties);
   
-        String libraryType = (projectType.isDynamicLibrary() && !targetName.startsWith("lib") || projectType.isAudioPlugin()) ? " MODULE" : "";
-  
+   
         if(isLibrary || projectType.isAudioPlugin())
             out << "add_library(" << addQuotesIfContainsSpaces(targetName) << libraryType;
         else
@@ -789,9 +804,9 @@ private:
 
         for(int i = 0; i < propNames.size(); ++i)
         {
-            auto key = propNames[i];
+            const String& key = propNames[i];
     
-                out << "    " << key << " " << targetProperties[key].quoted() << newLine;
+            out << "    " << key << " " << targetProperties[key].quoted() << newLine;
         }
   
         out << ")" << newLine;
