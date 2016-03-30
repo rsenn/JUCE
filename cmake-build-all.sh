@@ -60,6 +60,7 @@ cmake_build_all() {
 
     [ "${VERBOSE:-0}" -gt 1 ] && add_args '-DCMAKE_VERBOSE_MAKEFILE=TRUE'
     add_args '${GENERATOR:+-G "$GENERATOR"}'
+    add_args '${JUCE_LIBRARY:+-DJUCE_LIBRARY="$JUCE_LIBRARY"}'
     add_args '-DCONFIG="${BUILD_TYPE}"'
 
     [ $# -le 0 ] && set -- */*/*.jucer */*/*/*.jucer
