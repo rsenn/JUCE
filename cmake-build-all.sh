@@ -30,6 +30,7 @@ cmake_build_all() {
       case "$1" in
         -v | --verbose) VERBOSE="true"; shift ;;
         -f | --force) FORCE="true"; shift ;;
+        -j) PARALLEL="$2"; shift 2 ;; -j*)PARALLEL="${1#-j}"; shift ;;
 	-G) GENERATOR="$2"; shift 2 ;;
         -D) add_args "-D${2}"; shift 2 ;; -D*) add_args "$1"; shift ;;
         *=*) eval "${1%%=*}=\"\${1#*=}\""; shift ;;
@@ -45,7 +46,7 @@ cmake_build_all() {
 
     [ "$VERBOSE" = true ] && add_args '-DCMAKE_VERBOSE_MAKEFILE=TRUE'
     add_args '${GENERATOR:+-G${IFS}"$GENERATOR"}'
-    add_args '-DCMAKE_BUILD_TYPE=${CONFIG}'
+    add_args '-DCONFIG=${CONFIG}'
 
     [ $# -le 0 ] && set -- */*/*.jucer */*/*/*.jucer
 
@@ -107,10 +108,10 @@ cmake_build_all() {
 	    mkdir -p "$CMAKEDIR/$BUILDDIR"
 
 	   (eval "(change_dir '$CMAKEDIR/$BUILDDIR'; exec_cmd \${CMAKE-cmake} $ARGS ..)"
-	    exec_cmd make -C "$CMAKEDIR/$BUILDDIR")
+	    exec_cmd make ${PARALLEL:+-j$PARALLEL} -C "$CMAKEDIR/$BUILDDIR")
 	}
 
-	CMD="for CONFIG in ${CONFIG:-Debug Release}; do
+	CMD="for CONFIG in ${CONFIG:-Release Debug}; do
 	    build_dir
 	done"
 
