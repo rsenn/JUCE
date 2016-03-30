@@ -461,7 +461,7 @@ private:
 
     //==============================================================================
     void writeConfig(OutputStream& out, const BuildConfiguration& config, const String& targetName,
-                           StringPairArray& extraDefs, StringArray& extraIncPaths, StringPairArray& targetProps) const
+                     StringPairArray& extraDefs, StringArray& extraIncPaths, StringPairArray& targetProps) const
     {
         bool isLibrary = (projectType.isStaticLibrary() || projectType.isDynamicLibrary());
         const String buildDirName("build");
@@ -505,21 +505,10 @@ private:
         else if(config.isDebug() && !targetFilename.endsWith("_d"))
             targetFilename = targetFilename + "_d";
 
-#ifdef DEBUG
-        std::cerr << "config.getTargetBinaryNameString: " << config.getTargetBinaryNameString() << std::endl;
-#endif
-#ifdef DEBUG
-        std::cerr << "targetFilename (" << config.getName() << "): " << targetFilename << std::endl;
-#endif
-
         if (targetFilename != targetName)
         {
             String key = /*String(isLibrary ? "LIBRARY_" : "") +*/ "OUTPUT_NAME_" + config.getName().toUpperCase();
             targetProps.set(key, targetFilename);
-
-#ifdef DEBUG
-            std::cerr << "target property: " << key << " = " << targetFilename << std::endl;
-#endif
         }
 
         out << "# End of configuration: " << config.getName() << newLine;
@@ -568,7 +557,7 @@ private:
     //==============================================================================
     static void writeLibraryCheck(OutputStream& out, const String& libName, const String& symbolName) 
     {
-                String libFlag = "HAVE_LIB" + libName.toUpperCase();
+        String libFlag = "HAVE_LIB" + libName.toUpperCase();
 
         out << "  check_library_exists(" << libName << " " << symbolName << " \"\" " << libFlag << ")" << newLine;
         out << "  if(" << libFlag << ")" << newLine;
@@ -610,14 +599,16 @@ private:
     void writeWindowsChecks(OutputStream& out, Project& proj)  const
     {
         StringArray libs = mingwLibs;
-        //StringArray libraries;
+
         out << "if(WIN32)" << newLine;
         out << "  # --- Add winsock, winmm and other required libraries on Windows systems -------------" << newLine;
 
         if(proj.getModules().isModuleEnabled ("juce_core")) {
-             libs.addIfNotAlreadyThere("ws2_32");
+             libs.addIfNotAlreadyThere("shlwapi");
+             libs.addIfNotAlreadyThere("version");
              libs.addIfNotAlreadyThere("wininet");
              libs.addIfNotAlreadyThere("winmm");
+             libs.addIfNotAlreadyThere("ws2_32");
         }
        
         if(proj.getModules().isModuleEnabled ("juce_gui_basics")) {
@@ -634,8 +625,6 @@ private:
 
         out << "endif()" << newLine;
         out << newLine;
-  
-  
     }
 
     //==============================================================================
@@ -695,11 +684,12 @@ private:
         out << "endif()" << newLine;
         out << newLine;
 
-        out << "set(STATIC OFF CACHE BOOL \"Build static " << (isLibrary ? "library" : "binary") << "\")" << newLine;
+        out << "set(JUCE_LIBRARY \"\" CACHE FILEPATH \"External built JUCE library\")" << newLine;
+        out << "set(STATIC_LINK OFF CACHE BOOL \"Build static " << (isLibrary ? "library" : "binary") << "\")" << newLine;
         out << newLine;
         
         if(!isLibrary) {
-            out << "if(STATIC)" << newLine
+            out << "if(STATIC_LINK)" << newLine
             << "  set(CMAKE_" << buildType << "_LINKER_FLAGS \"-static\")" << newLine
             << "endif()" << newLine;
             out << newLine;
@@ -783,19 +773,28 @@ private:
         out << "set(LIBSOURCES";
         writeSources(out, libFiles);
         out << ")" << newLine;
+        
+        out << "set(SOURCES";
+        writeSources(out, sourceFiles);
+        out << ")" << newLine;
+        
+        out << "if(JUCE_LIBRARY)" << newLine
+            << "  link_libraries(${JUCE_LIBRARY})" << newLine
+            << "else()" << newLine
+            << "  set(SOURCES ${LIBSOURCES} ${SOURCES})" << newLine
+            << "endif()" << newLine;
+        out << newLine;
 
         for(ConstConfigIterator config(*this); config.next();)
             writeConfig(out, *config, targetName, extraDefinitions, extraIncludePaths, targetProperties);
-  
    
         if(isLibrary || projectType.isAudioPlugin())
             out << "add_library(" << addQuotesIfContainsSpaces(targetName) << libraryType;
         else
             out << "add_executable(" << addQuotesIfContainsSpaces(targetName);
 
-        out << " ${LIBSOURCES}";
+        out << " ${SOURCES}" << newLine;
 
-        writeSources(out, sourceFiles);
         out << ")" << newLine;
   
         StringArray propNames = targetProperties.getAllKeys();
@@ -810,6 +809,18 @@ private:
         }
   
         out << ")" << newLine;
+        
+        out << newLine;
+        
+        out << "# Check if the last path components begins with 'Juce', if so, assume no bin/lib-subdirectories." << newLine
+            << "string(REGEX MATCH \".*[\\\\/][Jj][Uu][Cc][Ee][^/\\\\]*$\" INSTDIR \"${CMAKE_INSTALL_PREFIX}\")" << newLine;
+            
+        out << "if(INSTDIR STREQUAL \"\")"  << newLine
+            << "  set(INSTDIR \"${CMAKE_INSTALL_PREFIX}/" << (isLibrary ? "lib${LIBSUFFIX}" : "bin") << "\")"  << newLine
+            << "endif()" << newLine;
+        out << newLine;
+        
+        out << "install(TARGETS " << addQuotesIfContainsSpaces(targetName) << " DESTINATION \"${INSTDIR}\"" << ")" << newLine;
     }
 
     //==============================================================================
