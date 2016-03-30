@@ -584,7 +584,7 @@ private:
     //==============================================================================
     void writeLinuxChecks(OutputStream& out, Project& proj) const
     {
-        out << "if(UNIX)" << newLine;
+        out << "elseif(UNIX)" << newLine;
         out << "  # --- Check for X11 and dlopen(3) on UNIX systems -------------" << newLine;
         if(proj.getModules().isModuleEnabled ("juce_gui_basics")) {
             writeIncludeFind(out, "X11", true);
@@ -637,8 +637,8 @@ private:
         
          writeLinkLibraries(out, libs);
 
-        out << "endif()" << newLine;
-        out << newLine;
+//        out << "endif()" << newLine;
+//        out << newLine;
     }
 
     //==============================================================================
@@ -772,8 +772,8 @@ private:
         
         targetProperties.set(String(isLibrary ? "SO" : "") + "VERSION", "0.0");
   
-        writeLinuxChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
         writeWindowsChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
+        writeLinuxChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
 
         out << "# --- Check for Freetype library -------------" << newLine;
         writeIncludeFind(out, "Freetype", false);

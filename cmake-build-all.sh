@@ -121,8 +121,8 @@ cmake_build_all() {
 		OFF) LIBTYPE="static" ;;
 	    esac
 	    case "$STATIC_LINK" in
-		OFF) LINK_TYPE="shared" ;;
-		ON) LINK_TYPE="static" ;;
+		OFF) LINKTYPE="shared" ;;
+		ON) LINKTYPE="static" ;;
 	    esac
 	    eval "BUILDDIR=$SUBDIR"
             WORKDIR="$CMAKEDIR/$BUILDDIR"
