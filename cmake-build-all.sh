@@ -38,6 +38,17 @@ cmake_build_all() {
       esac
     done
 
+    if [ "$VERBOSE" = true ]; then
+	dump_vars() { 
+	    O=; for V in ${@:-BUILDDIR BUILD_TYPE CLEAN CMAKEDIR CMAKELISTS CONFIG FILES FORCE GENERATOR IFS INTROJUCER LIBRARY LIBTYPE PROJECT SOURCEDIR VERBOSE}; do
+	       eval 'O="${O:+$O
+    }$V=\"${'$V'}\""'
+	     done; echo "$O" >&10
+	}
+    else
+       dump_vars() { :; }
+    fi
+
     case "$HOST":`type -p /bin/sh` in
       *mingw32:/bin/sh | *msys:*) : ${GENERATOR="MSYS Makefiles"} ;;
       *mingw32:*) : ${GENERATOR="MinGW Makefiles"} ;;
@@ -80,16 +91,6 @@ cmake_build_all() {
 		    exec_cmd "${INTROJUCER:-Introjucer}" --add-exporter "CMake" "$PROJECT"
 	    fi
 
-	    if [ "$VERBOSE" = true ]; then
-                dump_vars() { 
-		    O=; for V in ${@:-BUILDDIR BUILD_TYPE CLEAN CMAKEDIR CMAKELISTS CONFIG FILES FORCE GENERATOR IFS INTROJUCER LIBRARY LIBTYPE PROJECT SOURCEDIR VERBOSE}; do
-		       eval 'O="${O:+$O
-    }$V=\"${'$V'}\""'
-		     done; echo "$O" >&10
-		}
-            else
-               dump_vars() { :; }
-	    fi
 		
 
             dump_vars FORCE CMAKELISTS PROJECT
