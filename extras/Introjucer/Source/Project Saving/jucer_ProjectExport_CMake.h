@@ -21,13 +21,24 @@
 
   ==============================================================================
 */
-// cl Debug 32:   /MP /GS /analyze- /W4 /Zc:wchar_t /I"..\..\JuceLibraryCode" /I"..\..\..\..\modules" /ZI /Gm- /Od /Fd"Debug\\" /Zc:inline /fp:precise /D "_CRT_SECURE_NO_WARNINGS" /D "WIN32" /D "_WINDOWS" /D "DEBUG" /D "_DEBUG" /D "JUCER_VS2015_78A5022=1" /D "JUCE_APP_VERSION=4.1.0" /D "JUCE_APP_VERSION_HEX=0x40100" /errorReport:prompt /WX- /Zc:forScope /GR /Gd /Oy- /MTd /Fa"Debug\\" /EHsc /nologo /Fo"Debug\\" /Fp"Debug\Introjucer.pch" 
-// cl Release 32: /MP /GS /GL /analyze- /W4 /Zc:wchar_t /I"..\..\JuceLibraryCode" /I"..\..\..\..\modules" /Zi /Gm- /O1 /Fd"Release\\" /Zc:inline /fp:precise /D "_CRT_SECURE_NO_WARNINGS" /D "WIN32" /D "_WINDOWS" /D "NDEBUG" /D "JUCER_VS2015_78A5022=1" /D "JUCE_APP_VERSION=4.1.0" /D "JUCE_APP_VERSION_HEX=0x40100" /errorReport:prompt /WX- /Zc:forScope /GR /Gd /Oy- /MT /Fa"Release\\" /EHsc /nologo /Fo"Release\\" /Fp"Release\Introjucer.pch" 
-// cl Release 64: /MP /GS /GL /W4 /Zc:wchar_t /I"..\..\JuceLibraryCode" /I"..\..\..\..\modules" /Zi /Gm- /O1 /Fd"x64\Release\\" /Zc:inline /fp:precise /D "_CRT_SECURE_NO_WARNINGS" /D "WIN32" /D "_WINDOWS" /D "NDEBUG" /D "JUCER_VS2015_78A5022=1" /D "JUCE_APP_VERSION=4.1.0" /D "JUCE_APP_VERSION_HEX=0x40100" /errorReport:prompt /WX- /Zc:forScope /GR /Gd /MT /Fa"x64\Release\\" /EHsc /nologo /Fo"x64\Release\\" /Fp"x64\Release\Introjucer.pch" 
-// cl Debug 64:   /MP /GS /W4 /Zc:wchar_t /I"..\..\JuceLibraryCode" /I"..\..\..\..\modules" /Zi /Gm- /Od /Fd"x64\Debug\\" /Zc:inline /fp:precise /D "_CRT_SECURE_NO_WARNINGS" /D "WIN32" /D "_WINDOWS" /D "DEBUG" /D "_DEBUG" /D "JUCER_VS2015_78A5022=1" /D "JUCE_APP_VERSION=4.1.0" /D "JUCE_APP_VERSION_HEX=0x40100" /errorReport:prompt /WX- /Zc:forScope /GR /Gd /MTd /Fa"x64\Debug\\" /EHsc /nologo /Fo"x64\Debug\\" /Fp"x64\Debug\Introjucer.pch" 
 class CMakeProjectExporter  : public ProjectExporter
 {
 public:
+
+
+    enum JuceLinkage
+    {
+        buildJuceSources = 1,
+        buildJuceAsLib = 2,
+    };
+
+    enum OptimisationLevel
+    {
+        optimisationOff = 1,
+        optimiseMinSize = 2,
+        optimiseMaxSpeed = 3
+    };
+
     //===============================================================e===============
     static const char* getName() noexcept
     {
@@ -71,10 +82,7 @@ public:
     }
     bool launchProject() override
     {
-        //RelativePath buildPath( getTargetFolder().getChildFile("CMakeLists.txt"), getTargetFolder(), RelativePath::buildTargetFolder);
-        //File buildDir(buildPath.toUnixStyle());
-        //String location = getTargetLocationValue().getValue();
-        File buildDir(getTargetLocationString()); //(buildPath.toUnixStyle());
+        File buildDir(getTargetLocationString());
         ChildProcess proc;
         String output;
         bool success;
@@ -139,25 +147,24 @@ public:
     {
         return false;
     }
-    Value getCppStandardValue()
-    {
-        return getSetting(Ids::cppLanguageStandard);
-    }
-    String getCppStandardString() const
-    {
-        return settings[Ids::cppLanguageStandard];
-    }
 
-    void createExporterProperties(PropertyListBuilder& properties) override
-    {
-        static const char* cppStandardNames[]  = { "C++03", "C++11", nullptr };
-        static const char* cppStandardValues[] = { "-std=c++03", "-std=c++11", nullptr };
+    Value getCppStandardValue()                         { return getSetting (Ids::cppLanguageStandard); }
+    String getCppStandardString() const                 { return settings[Ids::cppLanguageStandard]; }
 
-        properties.add(new ChoicePropertyComponent(getCppStandardValue(),
-                                                   "C++ standard to use",
-                                                   StringArray(cppStandardNames),
-                                                   Array<var> (cppStandardValues)),
-                       "The C++ standard to specify in the makefile");
+    Value getJuceLinkageValue()                         { return getSetting (Ids::juceLinkage); }
+    String getJuceLinkageString() const                 { return settings[Ids::juceLinkage]; }
+
+    void createExporterProperties(PropertyListBuilder& props) override
+    {
+	static const char* juceLinkage[] = { "Build JUCE from sources", "Build JUCE as library", 0 };
+	const int juceLinkageValues[]     = { buildJuceSources, buildJuceAsLib,  0 };
+
+	props.add (new ChoicePropertyComponent (getJuceLinkageValue(), "Linkage type",
+						StringArray (juceLinkage),
+						Array<var> (juceLinkageValues)),
+		   "The linkage type for this configuration");
+
+
     }
 
     //==============================================================================
@@ -184,33 +191,53 @@ protected:
         CMakeBuildConfiguration(Project& p, const ValueTree& settings, const ProjectExporter& e)
             : BuildConfiguration(p, settings, e)
         {
+            if (getWarningLevel() == 0)
+                getWarningLevelValue() = 4;
+
             setValueIfVoid(getLibrarySearchPathValue(), "${CMAKE_SYSTEM_LIBRARY_PATH}");
         }
 
-        Value getArchitectureType()
-        {
-            return getValue(Ids::winArchitecture);
-        }
-        var getArchitectureTypeVar() const
-        {
-            return config [Ids::winArchitecture];
-        }
+       Value getWarningLevelValue()                       { return getValue (Ids::winWarningLevel); }
+        int getWarningLevel() const                       { return config [Ids::winWarningLevel]; }
+
+        Value shouldGenerateDebugSymbolsValue()           { return getValue (Ids::alwaysGenerateDebugSymbols); }
+        bool shouldGenerateDebugSymbols() const           { return config [Ids::alwaysGenerateDebugSymbols]; }
+
+	Value getUsingRuntimeLibDLL()                     { return getValue (Ids::useRuntimeLibDLL); }
+	String getUsingRuntimeLibDLLString() const        { return config[Ids::useRuntimeLibDLL]; }
+
+        Value getArchitectureType()                       { return getValue(Ids::winArchitecture); }
+        var getArchitectureTypeVar() const                {  return config [Ids::winArchitecture]; }
 
         var getDefaultOptimisationLevel() const override
         {
             return var((int)(isDebug() ? gccO0 : gccO3));
         }
 
-        void createConfigProperties(PropertyListBuilder& props) override
+        void createConfigProperties (PropertyListBuilder& props) override
         {
-            addGCCOptimisationProperty(props);
+            static const char* optimisationLevels[] = { "No optimisation", "Minimise size", "Maximise speed", 0 };
+            const int optimisationLevelValues[]     = { optimisationOff, optimiseMinSize, optimiseMaxSpeed, 0 };
 
-            static const char* const archNames[] = { "(Default)", "<None>",       "32-bit (-m32)", "64-bit (-m64)", "ARM v6",       "ARM v7" };
-            const var archFlags[]                = { var(),       var(String()), "-m32",         "-m64",           "-march=armv6", "-march=armv7" };
+            props.add (new ChoicePropertyComponent (getOptimisationLevel(), "Optimisation",
+                                                    StringArray (optimisationLevels),
+                                                    Array<var> (optimisationLevelValues)),
+                       "The optimisation level for this configuration");
 
-            props.add(new ChoicePropertyComponent(getArchitectureType(), "Architecture",
-                                                  StringArray(archNames, numElementsInArray(archNames)),
-                                                  Array<var> (archFlags, numElementsInArray(archFlags))));
+            static const char* warningLevelNames[] = { "Low", "Medium", "High", nullptr };
+            const int warningLevels[] = { 2, 3, 4 };
+
+            props.add (new ChoicePropertyComponent (getWarningLevelValue(), "Warning Level",
+                                                    StringArray (warningLevelNames), Array<var> (warningLevels, numElementsInArray (warningLevels))));
+
+      
+            {
+                static const char* runtimeNames[] = { "(Default)", "Use static runtime", "Use DLL runtime", nullptr };
+                const var runtimeValues[] = { var(), var (false), var (true) };
+
+                props.add (new ChoicePropertyComponent (getUsingRuntimeLibDLL(), "Runtime Library",
+                                                        StringArray (runtimeNames), Array<var> (runtimeValues, numElementsInArray (runtimeValues))));
+            }
         }
     };
 
@@ -219,7 +246,19 @@ protected:
         return new CMakeBuildConfiguration(project, tree, *this);
     }
 
+
+    static const char* getOptimisationLevelString (int level)
+    {
+        switch (level)
+        {
+            case optimiseMaxSpeed:  return "Full";
+            case optimiseMinSize:   return "MinSpace";
+            default:                return "Disabled";
+        }
+    }
+
 private:
+
     //==============================================================================
     void findFilesToCompile(const Project::Item& projectItem, Array<RelativePath>& results, bool libFiles = false) const
     {
@@ -375,25 +414,12 @@ private:
 		compileFlagsMSVC.add("/Od");
 		compileFlagsMSVC.add("/D");
 		compileFlagsMSVC.add("/MTd");
-
-/*		compileFlagsMSVC.add("/FaDebug\\");
-		compileFlagsMSVC.add("/FoDebug\\");
-		compileFlagsMSVC.add("/FpDebug\Introjucer.pch");
-*/
 	    } else {
 		compileFlagsGCC.add("-O"  + config->getGCCOptimisationFlag());
 		compileFlagsGCC.add("-fomit-frame-pointer");
 
 		compileFlagsMSVC.add("/O" + config->getGCCOptimisationFlag());
 		compileFlagsMSVC.add("/MT");
-		//compileFlagsMSVC.add("/Os"); //favor code space      
-		//compileFlagsMSVC.add("/Ox"); // maximum optimizations             
-		//compileFlagsMSVC.add("/Oy-"); 
-/*
-		compileFlagsMSVC.add("/FdRelease\\");
-		compileFlagsMSVC.add("/FaRelease\\");
-		compileFlagsMSVC.add("/FoRelease\\");
-		compileFlagsMSVC.add("/FpRelease\Introjucer.pch");*/
 	    }
         } else {
 
@@ -401,7 +427,6 @@ private:
 	    compileFlagsGCC.add("-frtti");
 
 	    compileFlagsMSVC.add("/GL");          // link-time code-gen
-	    //compileFlagsMSVC.add("/MP");        // /MP[n] use up to 'n' processes for compilation
 	    compileFlagsMSVC.add("/GS");          // enable security checks
 	    compileFlagsMSVC.add("/analyze-");    // Disable native analysis  
 	    compileFlagsMSVC.add("/W2");          // Warning level 2
@@ -526,11 +551,6 @@ private:
 
         if(fileName.endsWith(".so"))
             fileName = fileName.substring(0, fileName.length() - 3);
-
-/*        if (!config.isDebug() && fileName.endsWith("_d"))
-            fileName = fileName.substring(0, fileName.length() - 2);
-        else if(config.isDebug() && !fileName.endsWith("_d"))
-            fileName = fileName + "_d";*/
          
         return fileName;
     }
@@ -539,7 +559,6 @@ private:
     void writeConfig(OutputStream& out, const BuildConfiguration& config, const String& targetName,
                      StringPairArray& extraDefs, StringPairArray& targetProps) const
     {
-     //   bool isLibrary = (projectType.isStaticLibrary() || projectType.isDynamicLibrary());
         const String buildDirName("build");
         const String intermediatesDirName(buildDirName + "/intermediate/" + config.getName());
         String targetFileName = getTargetFilename(config);
@@ -559,9 +578,6 @@ private:
         writeLinkDirectories(out, config);
         
         out << "endif()" << newLine;
-       /* out << newLine;
-        out << "set(TARGET_NAME_" << config.getName().toUpperCase() << " \"" << targetFileName << "\")" << newLine;
-        */
         
         if(config.isDebug())
             targetProps.set("DEBUG_POSTFIX", "_d");
@@ -881,14 +897,7 @@ private:
   
         out << ")" << newLine;
         out << newLine;
-     /*   
-         out << "if(CMAKE_BUILD_TYPE STREQUAL \"Debug\")" << newLine
-             << "  set_target_properties(" << addQuotesIfContainsSpaces(targetName) << " PROPERTIES OUTPUT_NAME \"${TARGET_NAME_DEBUG}\")" <<  newLine
-             << "endif()" << newLine;
-       */  
 
-        out << newLine;
-        
         out << "# Check if the last path components begins with 'Juce', if so, assume no bin/lib-subdirectories." << newLine
             << "string(REGEX MATCH \".*[\\\\/][Jj][Uu][Cc][Ee][^/\\\\]*$\" INSTDIR \"${CMAKE_INSTALL_PREFIX}\")" << newLine;
             
@@ -898,6 +907,7 @@ private:
         out << newLine;
         
         out << "install(TARGETS " << addQuotesIfContainsSpaces(targetName) << " DESTINATION \"${INSTDIR}\"" << ")" << newLine;
+        out << newLine;        
     }
 
     //==============================================================================
