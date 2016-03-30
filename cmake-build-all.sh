@@ -9,18 +9,13 @@ cmake_build_all() {
 
     IFS="
 "
-    if [ -z "$INTROJUCER" ]; then
-        if type Introjucer >/dev/null 2>/dev/null; then
-            INTROJUCER="Introjucer"
-        else 
-            INTROJUCER=$(ls -td */*/*/*/{*,*/*,*/*/*}Introjucer{,.exe} 2>/dev/null |head -n1)
-        fi
-    fi
+    find_prog() {
+        eval "shift; for P; do if [ -z \"\$$1\" ]; then
+            $1=\`type \$P | sed -n 's,.* is ,,p'\`
+            [ -z \"\$$1\" -o ! -e \"\$$1\" ] && unset $1 || { echo \"Found $1 at \$$1\" >&10; break; }
+        fi; done"
+    }
 
-    : ${CXX="g++"}
-
-    HOST=`"$CXX" -dumpmachine`
-    
     add_args() {
       IFS=" $IFS"
       ARGS="${ARGS:+$ARGS }$*"
@@ -31,9 +26,11 @@ cmake_build_all() {
       cd "$1"
     }
     exec_cmd() {
-     (exec  2>&10
-      set -x
-      "$@")
+     ( exec  2>&10;set -x
+      #echo "+ $@" >&10; 
+      [ "$QUIET" = true ] && exec >/dev/null
+
+      "$@" 2>&1 )
     }
     show_help() {
         echo "Usage: ${MYNAME} [OPTIONS] <jucer-files|source-dirs>
@@ -58,6 +55,7 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
           -h | --help) show_help ; exit  ;;
         -C | --clean) CLEAN="true"; shift ;;
         -v | --verbose) : ${VERBOSE:=0}; VERBOSE=$((VERBOSE+1)); shift ;;
+        -q | --quiet) QUIET="true"; shift ;;
         -f | --force) FORCE="true"; shift ;;
         -j) PARALLEL="$2"; shift 2 ;; -j*)PARALLEL="${1#-j}"; shift ;;
 	-G) GENERATOR="$2"; shift 2 ;;
@@ -67,6 +65,22 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
       esac
     done
 
+    if [ -z "$INTROJUCER" ]; then
+        if type Introjucer >/dev/null 2>/dev/null; then
+            INTROJUCER="Introjucer"
+        else 
+            INTROJUCER=$(ls -td */*/*/*/{*,*/*,*/*/*}Introjucer{,.exe} 2>/dev/null |head -n1)
+        fi
+    fi
+
+    find_prog INTROJUCER Introjucer "The Introjucer"
+    find_prog CXX g++
+    find_prog CCACHE ccache
+    find_prog CMAKE cmake
+    find_prog MAKE make
+   
+    HOST=`${CXX-g++} -dumpmachine`
+    
     if [ "${VERBOSE:-0}" -gt 1 ]; then
 	dump_vars() { 
 	    O=; for V in ${@:-BUILDDIR BUILD_TYPE CLEAN CMAKEDIR CMAKELISTS CONFIG FILES FORCE GENERATOR IFS INTROJUCER LIBRARY LINKAGE PROJECT SOURCEDIR VERBOSE}; do
@@ -88,6 +102,8 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
     add_args '${GENERATOR:+-G "$GENERATOR"}'
     add_args '${JUCE_LIBRARY:+-DJUCE_LIBRARY="$JUCE_LIBRARY"}'
     add_args '-DCONFIG="${BUILD_TYPE}"'
+    add_args '${CXX:+-DCMAKE_CXX_COMPILER="$CXX"}'
+    add_args '${CCACHE:+-DCMAKE_CXX_COMPILER_LAUNCHER="$CCACHE"}'
 
     [ $# -le 0 ] && set -- */*/*.jucer */*/*/*.jucer
 
@@ -136,17 +152,7 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
 
         [ "$CLEAN" = true ] && exit 0
 
-	
-	
 	build_dir() {
-#	    case "$BUILD_SHARED_LIBS" in
-#		ON) LINKAGE="shared" ;;
-#		OFF) LINKAGE="static" ;;
-#	    esac
-#	    case "$STATIC_LINK" in
-#		OFF) LINKTYPE="shared" ;;
-#		ON) LINKTYPE="static" ;;
-#	    esac
 	    eval "BUILDDIR=$SUBDIR"
             WORKDIR="$CMAKEDIR/$BUILDDIR"
 
@@ -154,11 +160,11 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
             dump_vars BUILDDIR  WORKDIR
 
             # --- configure --------------
-	   (change_dir "$WORKDIR";  eval "exec_cmd \${CMAKE-cmake} $ARGS ..")
+	   (change_dir "$WORKDIR";  eval "exec_cmd \$CMAKE $ARGS ..")
 
 <<<<<<< 184266e3c26e959bf61a9741f2b41572ed615708
             # --- build ------------------
-            set make -C "$WORKDIR" 
+            set $MAKE -C "$WORKDIR" 
 	    exec_cmd "$@"
 
             # --- install ----------------
@@ -189,7 +195,7 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
                 esac; $CMD; done"
           add_args '-DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
         else 
-	  CMD="for LINKAGE in \${LINKAGE:-shared static}; do 
+	  CMD="for LINKAGE in \${LINKAGE:-shared}; do 
                  case \$LINKAGE in
                     shared) STATIC_LINK=OFF ;; static) STATIC_LINK=ON ;;
                 esac; $CMD; done"
