@@ -31,6 +31,7 @@ cmake_build_all() {
         -C | --clean) CLEAN="true"; shift ;;
         -v | --verbose) VERBOSE="true"; shift ;;
         -f | --force) FORCE="true"; shift ;;
+        -j) PARALLEL="$2"; shift 2 ;; -j*)PARALLEL="${1#-j}"; shift ;;
 	-G) GENERATOR="$2"; shift 2 ;;
         -D) add_args "-D${2}"; shift 2 ;; -D*) add_args "$1"; shift ;;
         *=*) CMD="${1%%=*}=\"${1#*=}\"";  [ "$VERBOSE" = true ] && echo  "$CMD" >&10; eval "$CMD"; shift ;;
@@ -127,6 +128,7 @@ cmake_build_all() {
             # --- configure --------------
 	   (change_dir "$WORKDIR";  eval "exec_cmd \${CMAKE-cmake} $ARGS ..")
 
+<<<<<<< 184266e3c26e959bf61a9741f2b41572ed615708
             # --- build ------------------
             set make -C "$WORKDIR" 
 	    exec_cmd "$@"
@@ -139,6 +141,13 @@ cmake_build_all() {
 	}
 
 	CMD="for BUILD_TYPE in ${CONFIG:-Debug Release}; do
+=======
+	   (eval "(change_dir '$CMAKEDIR/$BUILDDIR'; exec_cmd \${CMAKE-cmake} $ARGS ..)"
+	    exec_cmd make ${PARALLEL:+-j$PARALLEL} -C "$CMAKEDIR/$BUILDDIR")
+	}
+
+	CMD="for CONFIG in ${CONFIG:-Release Debug}; do
+>>>>>>> ...
 	    build_dir
 	done"
 
