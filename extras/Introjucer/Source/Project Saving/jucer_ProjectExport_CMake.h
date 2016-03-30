@@ -346,14 +346,21 @@ private:
     }
 
     //==============================================================================
-    void writeCompileFlags(OutputStream& out,  const BuildConfiguration* config,
-                 const StringArray& flags) const
+    void writeCompileFlags(OutputStream& out, const BuildConfiguration* config,
+                           const StringArray& flags) const
     {
         StringArray compileFlagsGCC, compileFlagsMSVC;
 
         compileFlagsGCC.addArray(flags);
         compileFlagsMSVC.addArray(flags);
 
+	String cppStandardToUse = getCppStandardString();
+
+	if(cppStandardToUse.isEmpty())
+	    cppStandardToUse = "-std=c++11";
+
+	compileFlagsGCC.add(cppStandardToUse);
+    
         if(config) {
 	    if(config->isDebug())
 	    {
@@ -388,37 +395,32 @@ private:
 		compileFlagsMSVC.add("/FoRelease\\");
 		compileFlagsMSVC.add("/FpRelease\Introjucer.pch");*/
 	    }
-        }
+        } else {
 
-	compileFlagsGCC.add("-fexceptions");
-	compileFlagsGCC.add("-frtti");
+	    compileFlagsGCC.add("-fexceptions");
+	    compileFlagsGCC.add("-frtti");
 
-        compileFlagsMSVC.add("/GL"); // link-time code-gen
-
-	//compileFlagsMSVC.add("/MP"); // /MP[n] use up to 'n' processes for compilation
-	compileFlagsMSVC.add("/GS"); // enable security checks
-	compileFlagsMSVC.add("/analyze-"); // Disable native analysis  
-	compileFlagsMSVC.add("/W2"); // Warning level 2
-	compileFlagsMSVC.add("/Zc:wchar_t");  //  wchar_t is a native type, not a typedef
-	compileFlagsMSVC.add("/Gm-"); // disable minimal rebuild
-	compileFlagsMSVC.add("/Zc:inline"); // remove unreferenced function 
-	compileFlagsMSVC.add("/fp:precise");
-	compileFlagsMSVC.add("/GR"); // C++ RTTI
-	compileFlagsMSVC.add("/Gd");
-
-	compileFlagsMSVC.add("/EHsc"); // enable C++ EH & extern "C" defaults to nothrow     
-	compileFlagsMSVC.add("/nologo");
+	    compileFlagsMSVC.add("/GL");          // link-time code-gen
+	    //compileFlagsMSVC.add("/MP");        // /MP[n] use up to 'n' processes for compilation
+	    compileFlagsMSVC.add("/GS");          // enable security checks
+	    compileFlagsMSVC.add("/analyze-");    // Disable native analysis  
+	    compileFlagsMSVC.add("/W2");          // Warning level 2
+	    compileFlagsMSVC.add("/Zc:wchar_t");  //  wchar_t is a native type, not a typedef
+	    compileFlagsMSVC.add("/Gm-");         // disable minimal rebuild
+	    compileFlagsMSVC.add("/Zc:inline");   // remove unreferenced function 
+	    compileFlagsMSVC.add("/fp:precise");
+	    compileFlagsMSVC.add("/GR");          // C++ RTTI
+	    compileFlagsMSVC.add("/Gd");
+	    compileFlagsMSVC.add("/EHsc");        // enable C++ EH & extern "C" defaults to nothrow     
+	    compileFlagsMSVC.add("/nologo");
+	}
 
 	{ 
-	    String varSuffix = (config ? (String("_") + config->getName().toUpperCase()) : "") + " ";
+	    String varSuffix = (config ? (String("_") + config->getName().toUpperCase()) : "");
 	    out << "if(MSVC)" << newLine
-		<< "  set(CMAKE_CXX_FLAGS" << varSuffix 
-		<<  getCleanedStringArray(compileFlagsMSVC).joinIntoString(" ") << ")" << newLine
-		<< "endif()" << newLine;
-
-	    out << "else()" << newLine
-                << "  set(CMAKE_CXX_FLAGS" << varSuffix 
-	        <<  getCleanedStringArray(compileFlagsGCC).joinIntoString(" ") << ")" << newLine
+		<< "  set(CMAKE_CXX_FLAGS" << varSuffix << " \"${CMAKE_CXX_FLAGS" << varSuffix << "} " << getCleanedStringArray(compileFlagsMSVC).joinIntoString(" ") << "\")" << newLine
+	        << "else()" << newLine 
+		<< "  set(CMAKE_CXX_FLAGS" << varSuffix << " \"${CMAKE_CXX_FLAGS" << varSuffix << "} " << getCleanedStringArray(compileFlagsGCC).joinIntoString(" ") << "\")" << newLine
 	        << "endif()" << newLine;
 	}
 
@@ -450,22 +452,18 @@ private:
     StringPairArray getDefaultVars(OutputStream&out, StringPairArray& extraDefs, StringArray& extraIncludes) const
     {
         StringPairArray vars;
+ StringArray defaultCompileFlags;
 
-	String cppStandardToUse = getCppStandardString();
-
-	if(cppStandardToUse.isEmpty())
-	    cppStandardToUse = "-std=c++11";
-    
 	extraIncludes.insert(0, 
 	    RelativePath(project.getGeneratedCodeFolder(), getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle()
 	);
     
+        writeCompileFlags(out, nullptr, defaultCompileFlags);
+
         for (ConstConfigIterator config(*this); config.next();)
         {
-	    StringArray extraCompileFlags, compileFlags  = 
+	    StringArray configCompileFlags = defaultCompileFlags, compileFlags  = 
 		StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");
-
-	    extraCompileFlags.add(cppStandardToUse);
 
             for (int i = 0; i < compileFlags.size(); ++i)
             {
@@ -497,10 +495,10 @@ private:
                     }
                 }
 
-                extraCompileFlags.insert(0, t);
+                configCompileFlags.insert(0, t);
             }
 
-            writeCompileFlags(out, &(*config), extraCompileFlags);
+            writeCompileFlags(out, &(*config), configCompileFlags);
             setLinkerFlags(vars, *config);
 
             //std::cerr << "compileFlags arg: " << compileFlags.joinIntoString("|") << std::endl;
@@ -787,6 +785,8 @@ private:
             << "endif()" << newLine;
         out << newLine;
   
+
+
         vars = getDefaultVars(out, extraDefinitions, includeDirs);
         
         if (isLibrary) {
