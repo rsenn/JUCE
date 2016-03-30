@@ -80,11 +80,8 @@ cmake_build_all() {
 
     for PROJECT; do
 
-	if grep -q 'projectType="library"' "$PROJECT"; then
-	    LIBRARY=true
-	else
-	    LIBRARY=false
-	fi
+	grep -q 'projectType="library"' "$PROJECT" && LIBRARY=true || LIBRARY=false
+	grep -qi 'install\s*('  "$PROJECT" && INSTALLABLE=true || INSTALLABLE=false
 
        (SOURCEDIR=`dirname "$PROJECT"`
         CMAKEDIR="$SOURCEDIR/Builds/CMake"
@@ -140,10 +137,12 @@ cmake_build_all() {
 	    exec_cmd "$@"
 
             # --- install ----------------
-            set -- "$@" install
-             [ -n "$DESTDIR" ] && set -- "$@" DESTDIR="$DESTDIR"
+            if [ "$INSTALLABLE" = true ] ; then
+                set -- "$@" install
+                 [ -n "$DESTDIR" ] && set -- "$@" DESTDIR="$DESTDIR"
 
-	    exec_cmd "$@"
+                exec_cmd "$@"
+            fi
 	}
 
 	CMD="for BUILD_TYPE in ${CONFIG:-Debug Release}; do
