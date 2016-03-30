@@ -21,7 +21,10 @@
 
   ==============================================================================
 */
-
+// cl Debug 32:   /MP /GS /analyze- /W4 /Zc:wchar_t /I"..\..\JuceLibraryCode" /I"..\..\..\..\modules" /ZI /Gm- /Od /Fd"Debug\\" /Zc:inline /fp:precise /D "_CRT_SECURE_NO_WARNINGS" /D "WIN32" /D "_WINDOWS" /D "DEBUG" /D "_DEBUG" /D "JUCER_VS2015_78A5022=1" /D "JUCE_APP_VERSION=4.1.0" /D "JUCE_APP_VERSION_HEX=0x40100" /errorReport:prompt /WX- /Zc:forScope /GR /Gd /Oy- /MTd /Fa"Debug\\" /EHsc /nologo /Fo"Debug\\" /Fp"Debug\Introjucer.pch" 
+// cl Release 32: /MP /GS /GL /analyze- /W4 /Zc:wchar_t /I"..\..\JuceLibraryCode" /I"..\..\..\..\modules" /Zi /Gm- /O1 /Fd"Release\\" /Zc:inline /fp:precise /D "_CRT_SECURE_NO_WARNINGS" /D "WIN32" /D "_WINDOWS" /D "NDEBUG" /D "JUCER_VS2015_78A5022=1" /D "JUCE_APP_VERSION=4.1.0" /D "JUCE_APP_VERSION_HEX=0x40100" /errorReport:prompt /WX- /Zc:forScope /GR /Gd /Oy- /MT /Fa"Release\\" /EHsc /nologo /Fo"Release\\" /Fp"Release\Introjucer.pch" 
+// cl Release 64: /MP /GS /GL /W4 /Zc:wchar_t /I"..\..\JuceLibraryCode" /I"..\..\..\..\modules" /Zi /Gm- /O1 /Fd"x64\Release\\" /Zc:inline /fp:precise /D "_CRT_SECURE_NO_WARNINGS" /D "WIN32" /D "_WINDOWS" /D "NDEBUG" /D "JUCER_VS2015_78A5022=1" /D "JUCE_APP_VERSION=4.1.0" /D "JUCE_APP_VERSION_HEX=0x40100" /errorReport:prompt /WX- /Zc:forScope /GR /Gd /MT /Fa"x64\Release\\" /EHsc /nologo /Fo"x64\Release\\" /Fp"x64\Release\Introjucer.pch" 
+// cl Debug 64:   /MP /GS /W4 /Zc:wchar_t /I"..\..\JuceLibraryCode" /I"..\..\..\..\modules" /Zi /Gm- /Od /Fd"x64\Debug\\" /Zc:inline /fp:precise /D "_CRT_SECURE_NO_WARNINGS" /D "WIN32" /D "_WINDOWS" /D "DEBUG" /D "_DEBUG" /D "JUCER_VS2015_78A5022=1" /D "JUCE_APP_VERSION=4.1.0" /D "JUCE_APP_VERSION_HEX=0x40100" /errorReport:prompt /WX- /Zc:forScope /GR /Gd /MTd /Fa"x64\Debug\\" /EHsc /nologo /Fo"x64\Debug\\" /Fp"x64\Debug\Introjucer.pch" 
 class CMakeProjectExporter  : public ProjectExporter
 {
 public:
@@ -268,9 +271,11 @@ private:
     //==============================================================================
     static void writeIncludeDirectories(OutputStream& out, const StringArray& searchPaths) 
     {
-        out << "  include_directories(" << newLine;
-        writePathList(out, getCleanedStringArray(searchPaths), "  ");
-        out << ")" << newLine;
+        if(searchPaths.size()) {
+            out << "  include_directories(" << newLine;
+            writePathList(out, getCleanedStringArray(searchPaths), "  ");
+            out << ")" << newLine;
+        }
     }
 
     //==============================================================================
@@ -341,26 +346,84 @@ private:
     }
 
     //==============================================================================
-    void setCompileFlags(StringPairArray& vars, const BuildConfiguration& config,
+    void writeCompileFlags(OutputStream& out,  const BuildConfiguration* config,
                  const StringArray& flags) const
     {
-        StringArray compileFlags = flags;
+        StringArray compileFlagsGCC, compileFlagsMSVC;
 
-        if(config.isDebug())
-        {
-            compileFlags.add("-g");
-            compileFlags.add("-ggdb");
+        compileFlagsGCC.addArray(flags);
+        compileFlagsMSVC.addArray(flags);
+
+        if(config) {
+	    if(config->isDebug())
+	    {
+		compileFlagsGCC.add("-g");
+		compileFlagsGCC.add("-ggdb");
+		compileFlagsGCC.add("-O0");
+	    
+		//compileFlagsMSVC.add("/Zi"); // debug symbols
+		compileFlagsMSVC.add("/ZI"); // edit&continue info
+		compileFlagsMSVC.add("/FdDebug"); // PDB file name
+
+		compileFlagsMSVC.add("/Od");
+		compileFlagsMSVC.add("/D");
+		compileFlagsMSVC.add("/MTd");
+
+/*		compileFlagsMSVC.add("/FaDebug\\");
+		compileFlagsMSVC.add("/FoDebug\\");
+		compileFlagsMSVC.add("/FpDebug\Introjucer.pch");
+*/
+	    } else {
+		compileFlagsGCC.add("-O"  + config->getGCCOptimisationFlag());
+		compileFlagsGCC.add("-fomit-frame-pointer");
+
+		compileFlagsMSVC.add("/O" + config->getGCCOptimisationFlag());
+		compileFlagsMSVC.add("/MT");
+		//compileFlagsMSVC.add("/Os"); //favor code space      
+		//compileFlagsMSVC.add("/Ox"); // maximum optimizations             
+		//compileFlagsMSVC.add("/Oy-"); 
+/*
+		compileFlagsMSVC.add("/FdRelease\\");
+		compileFlagsMSVC.add("/FaRelease\\");
+		compileFlagsMSVC.add("/FoRelease\\");
+		compileFlagsMSVC.add("/FpRelease\Introjucer.pch");*/
+	    }
         }
 
-        compileFlags.add("-O" + config.getGCCOptimisationFlag());
+	compileFlagsGCC.add("-fexceptions");
+	compileFlagsGCC.add("-frtti");
 
-        if(compileFlags.size() == 0)
-            return;
+        compileFlagsMSVC.add("/GL"); // link-time code-gen
 
-        vars.set("CMAKE_CXX_FLAGS_" + config.getName().toUpperCase(),
-                 getCleanedStringArray(compileFlags).joinIntoString(" "));
+	//compileFlagsMSVC.add("/MP"); // /MP[n] use up to 'n' processes for compilation
+	compileFlagsMSVC.add("/GS"); // enable security checks
+	compileFlagsMSVC.add("/analyze-"); // Disable native analysis  
+	compileFlagsMSVC.add("/W2"); // Warning level 2
+	compileFlagsMSVC.add("/Zc:wchar_t");  //  wchar_t is a native type, not a typedef
+	compileFlagsMSVC.add("/Gm-"); // disable minimal rebuild
+	compileFlagsMSVC.add("/Zc:inline"); // remove unreferenced function 
+	compileFlagsMSVC.add("/fp:precise");
+	compileFlagsMSVC.add("/GR"); // C++ RTTI
+	compileFlagsMSVC.add("/Gd");
+
+	compileFlagsMSVC.add("/EHsc"); // enable C++ EH & extern "C" defaults to nothrow     
+	compileFlagsMSVC.add("/nologo");
+
+	{ 
+	    String varSuffix = (config ? (String("_") + config->getName().toUpperCase()) : "") + " ";
+	    out << "if(MSVC)" << newLine
+		<< "  set(CMAKE_CXX_FLAGS" << varSuffix 
+		<<  getCleanedStringArray(compileFlagsMSVC).joinIntoString(" ") << ")" << newLine
+		<< "endif()" << newLine;
+
+	    out << "else()" << newLine
+                << "  set(CMAKE_CXX_FLAGS" << varSuffix 
+	        <<  getCleanedStringArray(compileFlagsGCC).joinIntoString(" ") << ")" << newLine
+	        << "endif()" << newLine;
+	}
+
+        out << newLine;
     }
-
 
     //==============================================================================
     void setLinkerFlags(StringPairArray& vars, const BuildConfiguration& config) const
@@ -384,47 +447,49 @@ private:
     }
 
     //==============================================================================
-    StringPairArray getDefaultVars(StringPairArray& extraDefs, StringArray& extraIncPaths) const
+    StringPairArray getDefaultVars(OutputStream&out, StringPairArray& extraDefs, StringArray& extraIncludes) const
     {
         StringPairArray vars;
 
+	String cppStandardToUse = getCppStandardString();
+
+	if(cppStandardToUse.isEmpty())
+	    cppStandardToUse = "-std=c++11";
+    
+	extraIncludes.insert(0, 
+	    RelativePath(project.getGeneratedCodeFolder(), getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle()
+	);
+    
         for (ConstConfigIterator config(*this); config.next();)
         {
-            StringArray compileFlags, extraCompileFlags = 
-            StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");
+	    StringArray extraCompileFlags, compileFlags  = 
+		StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");
 
-            String cppStandardToUse = getCppStandardString();
+	    extraCompileFlags.add(cppStandardToUse);
 
-            if(cppStandardToUse.isEmpty())
-                cppStandardToUse = "-std=c++11";
-
-            compileFlags.add(cppStandardToUse);
-
-            for (int i = 0; i < extraCompileFlags.size(); ++i)
+            for (int i = 0; i < compileFlags.size(); ++i)
             {
-                const String& t = extraCompileFlags[i];
+                const String& t = compileFlags[i];
 
                 String arg;
 
-                //std::cerr << "extraCompilerFlags arg: " << t << std::endl;
+                std::cerr << "extraCompilerFlags arg: " << t << std::endl;
 
                 if (t.startsWith("-"))
                 {
                     if(t.length() > 2)
                         arg = t.substring(2);
                     else
-                        arg = extraCompileFlags[++i];
+                        arg = compileFlags[++i];
 
                     if (t.startsWith("-I"))
                     {
                         RelativePath includePath(arg, RelativePath::projectFolder);
-                        extraIncPaths.add(includePath.toUnixStyle());
+                        extraIncludes.add(includePath.toUnixStyle());
                         continue;
                     }
                     if (t.startsWith("-D"))
                     {
-                        //compileFlags.add(t);
-
                         StringArray def = StringArray::fromTokens(arg.unquoted(), "=" , "\"");
 
                         extraDefs.set(def[0], def[1].unquoted());
@@ -432,17 +497,17 @@ private:
                     }
                 }
 
-                //compileFlags.add(t);
+                extraCompileFlags.insert(0, t);
             }
 
-            setCompileFlags(vars, *config, compileFlags);
+            writeCompileFlags(out, &(*config), extraCompileFlags);
             setLinkerFlags(vars, *config);
 
             //std::cerr << "compileFlags arg: " << compileFlags.joinIntoString("|") << std::endl;
         }
+
         return vars;
     }
-    
     
     //==============================================================================
     String getTargetFilename(const BuildConfiguration& config) const
@@ -455,10 +520,10 @@ private:
         else
             fileName = fileName.upToLastOccurrenceOf(".", false, false) + makefileTargetSuffix;
 
-        if (fileName .startsWith("lib"))
+        if (fileName.startsWith("lib"))
             fileName = fileName.substring(3);
 
-        if (fileName .endsWith("_dll"))
+        if (fileName.endsWith("_dll"))
             fileName = fileName.substring(0, 4);
 
         if(fileName.endsWith(".so"))
@@ -541,14 +606,10 @@ private:
         out << "    link_libraries(${" << varName << "_LIBRARIES})" << newLine;
 
         if (required)
-        {
             out << "  else()" << newLine
                 << "    message(FATAL_ERROR \"" << libraryName << " library not found!\")" << newLine;
-        }
         else
-        {
             out << "    add_definitions(-DHAVE_" << varName << "=1)" << newLine;
-        }
 
         out << "  endif()" << newLine;
     }
@@ -613,6 +674,10 @@ private:
         if(proj.getModules().isModuleEnabled ("juce_gui_basics")) {
              libs.addIfNotAlreadyThere("imm32");
         }
+       
+        if(proj.getModules().isModuleEnabled ("juce_gui_extra")) {
+             libs.addIfNotAlreadyThere("oleaut32");
+        }
   
         if(proj.getModules().isModuleEnabled ("juce_opengl"))
              libs.addIfNotAlreadyThere("opengl32");
@@ -621,9 +686,6 @@ private:
           libs.addIfNotAlreadyThere("winmm");
         
          writeLinkLibraries(out, libs);
-
-//        out << "endif()" << newLine;
-//        out << newLine;
     }
 
     //==============================================================================
@@ -725,7 +787,7 @@ private:
             << "endif()" << newLine;
         out << newLine;
   
-        vars = getDefaultVars(extraDefinitions, includeDirs);
+        vars = getDefaultVars(out, extraDefinitions, includeDirs);
         
         if (isLibrary) {
             out << "if(NOT DEFINED BUILD_SHARED_LIBS)" << newLine;
@@ -793,11 +855,7 @@ private:
             << "endif()" << newLine;
         out << newLine;
 
-        
-       includeDirs.add(RelativePath(project.getGeneratedCodeFolder(), getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle());
-       includeDirs.addArray(extraSearchPaths);
-       
-       writeIncludeDirectories(includeDirs);
+       writeIncludeDirectories(out, includeDirs);
         
         for(ConstConfigIterator config(*this); config.next();)
             writeConfig(out, *config, targetName, extraDefinitions,  targetProperties);
@@ -829,7 +887,6 @@ private:
              << "endif()" << newLine;
        */  
 
-        
         out << newLine;
         
         out << "# Check if the last path components begins with 'Juce', if so, assume no bin/lib-subdirectories." << newLine
