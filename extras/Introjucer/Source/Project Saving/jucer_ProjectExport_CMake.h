@@ -721,20 +721,20 @@ private:
             << "endif()" << newLine;
         out << newLine;
   
-        out << "if(MINGW)" << newLine
-            << "  add_definitions(-D__MINGW__=1)" << newLine
+        out << "if(WIN32)" << newLine
+            << "  add_definitions(-DWIN32=1)" << newLine
+            << "  if(MSVC)" << newLine
+            << "    add_definitions(-D_WINDOWS=1)" << newLine
+            << "  elseif(MINGW)" << newLine
+            << "    add_definitions(-D__MINGW__=1)" << newLine
+/*            << "  elseif(MSYS)" << newLine
+            << "    add_definitions(-D__MSYS__=1)" << newLine*/
+            << "  endif()" << newLine
             << "elseif(UNIX)" << newLine
             << "  add_definitions(-DLINUX=1)" << newLine
-            << "elseif(MSVC)" << newLine
-            << "  add_definitions(-D_WINDOWS=1)" << newLine
             << "endif()" << newLine;
         out << newLine;
   
-        out << "if(WIN32)" << newLine
-            << "  add_definitions(-DWIN32=1)" << newLine
-            << "endif()" << newLine;
-        out << newLine;
-
         vars = getDefaultVars(extraDefinitions, extraIncludePaths);
         
         if (isLibrary) {
