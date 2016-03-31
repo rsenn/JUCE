@@ -26,7 +26,7 @@ class QtCreatorProjectExporter  : public ProjectExporter
 {
 public:
     //==============================================================================
-    static const char* getNameQtCreator()       { return "QtCreator";  }
+    static const char* getName()                { return "QtCreator";  }
     static const char* getValueTreeTypeName()   { return "QT_CREATOR"; }
 
     static QtCreatorProjectExporter* createForSettings (Project& project, const ValueTree& settings)
@@ -41,7 +41,7 @@ public:
     //==============================================================================
     QtCreatorProjectExporter (Project& p, const ValueTree& t)   : ProjectExporter (p, t)
     {
-        name = getNameQtCreator();
+        name = getName();
 
         if (getTargetLocationString().isEmpty())
             getTargetLocationValue() = getDefaultBuildsRootFolder() + "QtCreator";
@@ -106,7 +106,7 @@ protected:
 
     BuildConfiguration::Ptr createBuildConfig (const ValueTree& tree) const override
     {
-        return new QtCreatorBuildConfiguration (project, tree);
+        return new QtCreatorBuildConfiguration (project, tree, *this);
     }
 
 private:
@@ -144,7 +144,7 @@ private:
 
     String createDefineFlags (const StringPairArray& defs) const
     {
-        String s = "    DEFINES += \\" + newLine ;
+        String s = String("    DEFINES += \\") + newLine ;
 
         for (int i = 0; i < defs.size(); ++i)
         {
