@@ -187,20 +187,22 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
 	done"
 
 	SUBDIR='$BUILD_TYPE-$LINKAGE'
+         IFS="$IFS;,+ "
 	if [ "$LIBRARY" = true ]; then
-	  CMD="for LINKAGE in \${LINKAGE:-shared static}; do 
+          set -- ${LINKAGE:-shared static};
+	  CMD=" for LINKAGE ; do 
                  case \$LINKAGE in
                     shared) BUILD_SHARED_LIBS=ON ;; static) BUILD_SHARED_LIBS=OFF ;;
                 esac; $CMD; done"
           add_args '-DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS'
         else 
-	  CMD="for LINKAGE in \${LINKAGE:-shared}; do 
+          set -- ${LINKAGE:-shared};
+	  CMD=" for LINKAGE ; do 
                  case \$LINKAGE in
                     shared) STATIC_LINK=OFF ;; static) STATIC_LINK=ON ;;
                 esac; $CMD; done"
 	  add_args '-DSTATIC_LINK=$STATIC_LINK'
         fi
-         IFS="$IFS;,+ "
 	eval "$CMD"; } || { echo "Failed! ($?)" >&10; break; }
     done 2>&1 | tee "$MYNAME.log"
 }
