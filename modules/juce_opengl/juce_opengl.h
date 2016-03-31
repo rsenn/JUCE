@@ -71,13 +71,7 @@
   #define WINGDIAPI __declspec(dllimport)
   #define CLEAR_TEMP_WINGDIAPI 1
  #endif
-
- #if JUCE_MINGW
-  #include <GL/gl.h>
- #else
-  #include <gl/GL.h>
- #endif
-
+ #include <GL/gl.h>
  #ifdef CLEAR_TEMP_WINGDIAPI
   #undef WINGDIAPI
   #undef CLEAR_TEMP_WINGDIAPI
