@@ -552,6 +552,11 @@ private:
         if(fileName.endsWith(".so"))
             fileName = fileName.substring(0, fileName.length() - 3);
          
+        if (!config.isDebug() && fileName.endsWith("_d"))
+            fileName = fileName.substring(0, fileName.length() - 2);
+        else if(config.isDebug() && !fileName.endsWith("_d"))
+            fileName = fileName + "_d";
+         
         return fileName;
     }
 
@@ -608,9 +613,13 @@ private:
     }
 
     //==============================================================================
-    static void writeIncludeFind(OutputStream& out, const String& libraryName, bool required = false)
+    static void writeIncludeFind(OutputStream& out, const String& libraryName, bool required = false, const String& haveDef = "")
     {
         String varName = libraryName.toUpperCase();
+        String haveDefine = haveDef;
+
+        if(haveDefine.isEmpty())
+          haveDefine = "HAVE_" + varName + "=1";
 
         out << "  include(Find"+libraryName+")" << newLine
             << "  if(" << varName << "_FOUND)" << newLine
@@ -623,7 +632,7 @@ private:
             out << "  else()" << newLine
                 << "    message(FATAL_ERROR \"" << libraryName << " library not found!\")" << newLine;
         else
-            out << "    add_definitions(-DHAVE_" << varName << "=1)" << newLine;
+            out << "    add_definitions(-D" + haveDefine + ")" << newLine;
 
         out << "  endif()" << newLine;
     }
@@ -854,7 +863,7 @@ private:
         if (project.isConfigFlagEnabled("JUCE_USE_CURL"))
         {
             out << "# --- Check for libcurl -------------" << newLine;
-            writeIncludeFind(out, "CURL");
+            writeIncludeFind(out, "CURL", false, "JUCE_USE_CURL=1");
             out << newLine;
         }
   
