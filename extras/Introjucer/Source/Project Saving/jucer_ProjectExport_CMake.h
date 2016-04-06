@@ -847,7 +847,8 @@ private:
             out << "  set(LIB_PATH_NAME lib)" << newLine;
             out << "endif()" << newLine;
             out << newLine;
-            
+           
+            if(projectType.isAudioPlugin())
             targetProperties.set("PREFIX", "");
         }
         
