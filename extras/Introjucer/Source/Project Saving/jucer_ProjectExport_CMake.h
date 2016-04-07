@@ -477,7 +477,7 @@ private:
     StringPairArray getDefaultVars(OutputStream&out, StringPairArray& extraDefs, StringArray& extraIncludes) const
     {
         StringPairArray vars;
-	StringArray defaultCompileFlags;
+	StringArray defaultCompileFlags =  StringArray::fromTokens(getExtraCompilerFlagsString(), "; ", "\"'");
 
 	extraIncludes.insert(0, 
 	    RelativePath(project.getGeneratedCodeFolder(), getTargetFolder(), RelativePath::buildTargetFolder).toUnixStyle()
@@ -487,8 +487,8 @@ private:
 
         for (ConstConfigIterator config(*this); config.next();)
         {
-	    StringArray configCompileFlags = defaultCompileFlags, compileFlags  = 
-		StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");
+	    StringArray configCompileFlags = defaultCompileFlags, compileFlags; /* = 
+		StringArray::fromTokens(replacePreprocessorTokens(*config, getExtraCompilerFlagsString()), "; ", "\"'");*/
 
             for (int i = 0; i < compileFlags.size(); ++i)
             {
@@ -496,7 +496,6 @@ private:
 
                 String arg;
 
-                std::cerr << "extraCompilerFlags arg: " << t << std::endl;
 
                 if (t.startsWith("-"))
                 {
@@ -521,6 +520,7 @@ private:
                 }
 
                 configCompileFlags.insert(0, t);
+                std::cerr << "extraCompilerFlags arg: " << t << std::endl;
             }
 
             writeCompileFlags(out, &(*config), configCompileFlags);
