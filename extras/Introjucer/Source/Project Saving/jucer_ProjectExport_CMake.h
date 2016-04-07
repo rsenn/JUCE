@@ -554,8 +554,8 @@ private:
          
         if (!config.isDebug() && fileName.endsWith("_d"))
             fileName = fileName.substring(0, fileName.length() - 2);
-        else if(config.isDebug() && !fileName.endsWith("_d"))
-            fileName = fileName + "_d";
+        //else if(config.isDebug() && !fileName.endsWith("_d"))
+        //    fileName = fileName + "_d";
          
         return fileName;
     }
