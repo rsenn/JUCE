@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 cmake_build_all() {
     MYNAME=`basename "$0" .sh`
@@ -10,10 +10,10 @@ cmake_build_all() {
     IFS="
 "
     find_prog() {
-        eval "shift; for P; do if [ -z \"\$$1\" ]; then
-            $1=\`type \$P | sed -n 's,.* is ,,p'\`
-            [ -z \"\$$1\" -o ! -e \"\$$1\" ] && unset $1 || { echo \"Found $1 at \$$1\" >&10; break; }
-        fi; done"
+        eval "shift; for P; do if [ -z \"\$$1\" -o ! -e \"\$$1\" ]; then
+            $1=\`type \$P 2>&1 | sed -n 's,.* is ,,p'\`
+            [ -z \"\$$1\" -o ! -e \"\$$1\" ] && unset $1 || { echo \"Found $1 at \$$1\" >&2; return 0; }
+        fi; done; return 1"
     }
 
     add_args() {
@@ -25,6 +25,7 @@ cmake_build_all() {
       echo "Entering $1 ..." 1>&10
       pushd "$1"
     }
+    
     exec_cmd() {
      ( exec  2>&10;
       #echo "+ $@" >&10; 
@@ -52,6 +53,7 @@ $(${CMAKE:-cmake} --help|sed -n 's,^\s*\(.*\) = Generates.*,                    
     while :; do 
       case "$1" in
           -h | --help) show_help ; exit  ;;
+        -x | --debug) DEBUG="true"; shift ;;
         -C | --clean) CLEAN="true"; shift ;;
         -v | --verbose) : ${VERBOSE:=0}; VERBOSE=$((VERBOSE+1)); shift ;;
         -q | --quiet) QUIET="true"; shift ;;
