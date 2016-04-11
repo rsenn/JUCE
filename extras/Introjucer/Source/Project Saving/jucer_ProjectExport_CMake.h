@@ -87,7 +87,7 @@ public:
         String output;
         bool success;
         const char* cmakeCmd[] = {
-            "cmake", "-DCMAKE_VERBOSE_MAKEFILE=TRUE", ".",
+            "cmake-gui", "-DCMAKE_VERBOSE_MAKEFILE=TRUE", ".",
             nullptr
         };
 
@@ -100,7 +100,7 @@ public:
         output = proc.readAllProcessOutput();
 
         success = ( proc.getExitCode() == 0);
-
+/*
         {
             GroupComponent groupbox;
             TextButton closebutton("&close");
@@ -118,7 +118,7 @@ public:
             groupbox.addAndMakeVisible(closebutton);
 
             DialogWindow::showModalDialog("cmake output", &groupbox, nullptr, Colour(0,0,0), true, true, true);
-        }
+        }*/
 
         return success;
     }
