@@ -80,8 +80,8 @@ protected:
     class QtCreatorBuildConfiguration  : public BuildConfiguration
     {
     public:
-        QtCreatorBuildConfiguration (Project& p, const ValueTree& settings, const ProjectExporter& exporter)
-            : BuildConfiguration (p, settings, exporter)
+        QtCreatorBuildConfiguration (Project& p, const ValueTree& settings, const ProjectExporter& _exporter)
+            : BuildConfiguration (p, settings, _exporter)
         {
             setValueIfVoid (getLibrarySearchPathValue(), "/usr/X11R6/lib/");
         }
@@ -288,7 +288,7 @@ private:
          out << newLine;
 
         // Linux specific linker flags
-        out << "unix:  LIBS += -L/usr/X11R6/lib/ -lcurl";
+        out << "unix:  LIBS += $(shell pkg-config --libs x11 xinerama xext freetype2) -lcurl";
         for (int i = 0; i < linuxLibs.size(); ++i)
             out << " -l" << linuxLibs[i];
         out << newLine;
@@ -343,7 +343,7 @@ private:
             if (makeConfig->getArchitectureTypeString().isNotEmpty())
                 return makeConfig->getArchitectureTypeString();
 
-        return "-march=native";
+        return ""; //"-march=native";
     }*/
     JUCE_DECLARE_NON_COPYABLE (QtCreatorProjectExporter)
 };

@@ -390,7 +390,7 @@ private:
             if (! makeConfig->getArchitectureTypeVar().isVoid())
                 return makeConfig->getArchitectureTypeVar();
 
-        return "-march=native";
+        return ""; //"-march=native";
     }
 
     String getObjectFileFor (const RelativePath& file) const
