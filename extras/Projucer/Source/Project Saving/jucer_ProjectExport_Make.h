@@ -126,7 +126,7 @@ protected:
         MakeBuildConfiguration (Project& p, const ValueTree& settings, const ProjectExporter& e)
             : BuildConfiguration (p, settings, e)
         {
-            setValueIfVoid (getLibrarySearchPathValue(), "/usr/X11R6/lib/");
+            //setValueIfVoid (getLibrarySearchPathValue(), "/usr/X11R6/lib/");
         }
 
         Value getArchitectureType()             { return getValue (Ids::linuxArchitecture); }
@@ -191,8 +191,8 @@ private:
         StringArray searchPaths (extraSearchPaths);
         searchPaths.addArray (config.getHeaderSearchPaths());
 
-        searchPaths.insert (0, "/usr/include/freetype2");
-        searchPaths.insert (0, "/usr/include");
+        out <<  " $(shell pkg-config --cflags freetype2)";
+        //searchPaths.insert (0, "/usr/include");
 
         searchPaths = getCleanedStringArray (searchPaths);
 
