@@ -191,7 +191,7 @@ private:
         StringArray searchPaths (extraSearchPaths);
         searchPaths.addArray (config.getHeaderSearchPaths());
 
-        out <<  " $(shell pkg-config --cflags freetype2)";
+        out <<  " $(shell $(PKG_CONFIG) --cflags freetype2)";
         //searchPaths.insert (0, "/usr/include");
 
         searchPaths = getCleanedStringArray (searchPaths);
@@ -338,6 +338,17 @@ private:
             << "  CONFIG=" << escapeSpaces (getConfiguration(0)->getName()) << newLine
             << "endif" << newLine
             << newLine;
+            
+        out << "ifeq ($(PKG_CONFIG),)" << newLine
+            << "PKG_CONFIG := pkg-config" <<newLine
+            << "endif" << newLine
+            << newLine;
+
+        out << "ifneq ($(SYSROOT),)" << newLine
+            << "CFLAGS += --sysroot=$(SYSROOT)" << newLine
+            << "LDFLAGS += --sysroot=$(SYSROOT)" << newLine
+            << "endif" << newLine
+            << newLine;
 
         for (ConstConfigIterator config (*this); config.next();)
             writeConfig (out, *config);
@@ -348,7 +359,7 @@ private:
             << newLine;
 
         out << "$(OUTDIR)/$(TARGET): $(OBJECTS) $(RESOURCES)" << newLine
-            << "\t#@echo Linking " << projectName << newLine
+//            << "\t#@echo Linking " << projectName << newLine
             << "\t-@mkdir -p $(BINDIR)" << newLine
             << "\t-@mkdir -p $(LIBDIR)" << newLine
             << "\t-@mkdir -p $(OUTDIR)" << newLine
@@ -356,12 +367,12 @@ private:
             << newLine;
 
         out << "clean:" << newLine
-            << "\t#@echo Cleaning " << projectName << newLine
+//            << "\t#@echo Cleaning " << projectName << newLine
             << "\t$(CLEANCMD)" << newLine
             << newLine;
 
         out << "strip:" << newLine
-            << "\t#@echo Stripping " << projectName << newLine
+//            << "\t#@echo Stripping " << projectName << newLine
             << "\t-strip --strip-unneeded $(OUTDIR)/$(TARGET)" << newLine
             << newLine;
 
@@ -374,7 +385,7 @@ private:
                 out << "$(OBJDIR)/" << escapeSpaces (getObjectFileFor (files.getReference(i)))
                     << ": " << escapeSpaces (files.getReference(i).toUnixStyle()) << newLine
                     << "\t-@mkdir -p $(OBJDIR)" << newLine
-                    << "\t#@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
+//                    << "\t#@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
                     << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
                                                                          : "\t$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
                     << newLine << newLine;
