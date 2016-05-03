@@ -390,23 +390,44 @@ private:
         out << "ifdef SYSROOT" << newLine
             << "  CFLAGS += --sysroot=$(SYSROOT)" << newLine
             << "  LDFLAGS += --sysroot=$(SYSROOT)" << newLine
-            << "  PKG_CONFIG_PATH += $(SYSROOT)/usr/lib/$(CHOST)/pkgconfig" << newLine
-            << "  PKG_CONFIG_PATH += $(SYSROOT)/usr/lib/pkgconfig" << newLine
+
+            << "  ifdef PKG_CONFIG_PATH" << newLine
+            << "    PKG_CONFIG_DIRS += $(subst :, ,$(PKG_CONFIG_PATH))" << newLine
+            << "  endif" << newLine
+            << newLine;
+            
+            
+        out << "  PKG_CONFIG_DIRS += $(SYSROOT)/usr/lib/$(CHOST)/pkgconfig" << newLine
+            << "  PKG_CONFIG_DIRS += $(SYSROOT)/usr/lib/pkgconfig" << newLine;
+           
+        out << "  ifneq ($(PKG_CONFIG_DIRS),)" << newLine;
+            if(getGNUMakeBool()) out << "    PKG_CONFIG_PATH := $(subst $(EMPTY) $(EMPTY),:,$(PKG_CONFIG_DIRS))" << newLine;
+            else out << "    PKG_CONFIG_PATH = $$(set -- $(PKG_CONFIG_DIRS); IFS=\":$$IFS\"; echo \"$$*\")" << newLine;
+            out << "  endif" << newLine;
+
+         out
             //<< "  PKG_CONFIG_PATH := $(patsubst $(SYSROOT)%,%,$(SYSROOT)/usr/lib/$(CHOST)/pkgconfig):$(patsubst $(SYSROOT)%,%,$(SYSROOT)/usr/lib/pkgconfig)" << newLine
             << "  PKG_CONFIG_CMD += PKG_CONFIG_SYSROOT_DIR=\"$(SYSROOT)\"" << newLine
+            << newLine;
+            
+        out << "  ifneq ($(CHOST),)" << newLine
+            /*<< "    LDFLAGS += -Wl,-rpath-link=$(SYSROOT)/usr/lib/$(CHOST)" << newLine
+            << "    LDFLAGS += -Wl,-rpath-link=$(SYSROOT)/lib/$(CHOST)" << newLine
+            */
+            << "    LDFLAGS += -Wl,-rpath-link=$(SYSROOT)/lib/$(CHOST):$(SYSROOT)/usr/lib/$(CHOST)" << newLine
+            << "  endif" << newLine
+            << newLine;
+           
+        out << "endif" << newLine
+            << newLine;
+        
+        
+        out << "ifneq ($(PKG_CONFIG_PATH),)" << newLine
+            << "  PKG_CONFIG_CMD += PKG_CONFIG_PATH=\"$(PKG_CONFIG_PATH)\"" << newLine
             << "endif" << newLine
             << newLine;
 
-        out << "ifdef PKG_CONFIG_PATH" << newLine;
-
-        if(getGNUMakeBool())
-            out << "  PKG_CONFIG_CMD += PKG_CONFIG_PATH=\"$(subst $(EMPTY) $(EMPTY),:,$(PKG_CONFIG_PATH))\"" << newLine;
-        else
-            out << "  PKG_CONFIG_CMD += PKG_CONFIG_PATH=\"$$(set -- $(PKG_CONFIG_PATH); IFS=\":$$IFS\"; echo \"$$*\")\"" << newLine;
-
-        out << "endif" << newLine
-            << newLine
-            << "PKG_CONFIG_CMD += $(PKG_CONFIG)" << newLine
+        out << "PKG_CONFIG_CMD += $(PKG_CONFIG)" << newLine
             << newLine;
 
         for (ConstConfigIterator config (*this); config.next();)
