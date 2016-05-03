@@ -402,7 +402,7 @@ private:
            
         out << "  ifneq ($(PKG_CONFIG_DIRS),)" << newLine;
             if(getGNUMakeBool()) out << "    PKG_CONFIG_PATH := $(subst $(EMPTY) $(EMPTY),:,$(PKG_CONFIG_DIRS))" << newLine;
-            else out << "    PKG_CONFIG_PATH = $$(set -- $(PKG_CONFIG_DIRS); IFS=\":$$IFS\"; echo \"$$*\")" << newLine;
+            else out << "    PKG_CONFIG_PATH := $$(set -- $(PKG_CONFIG_DIRS); IFS=\":$$IFS\"; echo \"$$*\")" << newLine;
             out << "  endif" << newLine;
 
          out
