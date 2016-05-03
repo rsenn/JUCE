@@ -245,7 +245,7 @@ private:
         {
             StringArray flags (makefileExtraLinkerFlags);
 
-            if (makefileIsDLL)
+            if (makefileIsDLL || projectType.isDynamicLibrary())
                 flags.add ("-shared");
 
             if (! config.isDebug())
@@ -304,7 +304,7 @@ private:
         if (config.isDebug())
             out << " -g -ggdb";
 
-        if (makefileIsDLL)
+        if (makefileIsDLL || projectType.isDynamicLibrary())
             out << " -fPIC";
 
         out << " -O" << config.getGCCOptimisationFlag()
@@ -328,7 +328,7 @@ private:
 
         if (projectType.isStaticLibrary())
             targetName = getLibbedFilename (targetName);
-       else if(  projectType.isDynamicLibrary())
+       else if(makefileIsDLL || projectType.isDynamicLibrary())
          targetName = targetName + ".so";
         else
             targetName = targetName.upToLastOccurrenceOf (".", false, false) + makefileTargetSuffix;
