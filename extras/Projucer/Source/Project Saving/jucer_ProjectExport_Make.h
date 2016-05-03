@@ -326,12 +326,16 @@ private:
 
         String targetName (replacePreprocessorTokens (config, config.getTargetBinaryNameString()));
 
-        if (projectType.isStaticLibrary())
+        if (projectType.isStaticLibrary()) {
             targetName = getLibbedFilename (targetName);
-       else if(makefileIsDLL || projectType.isDynamicLibrary())
+       } else if(makefileIsDLL || projectType.isDynamicLibrary()) {
          targetName = targetName + ".so";
-        else
+         if(!targetName.startsWith("lib"))
+           targetName = "lib" + targetName;
+           
+        } else {
             targetName = targetName.upToLastOccurrenceOf (".", false, false) + makefileTargetSuffix;
+        }
 
         out << "  TARGET := " << escapeSpaces (targetName) << newLine;
 
