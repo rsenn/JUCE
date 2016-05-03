@@ -65,7 +65,13 @@ public:
 
     Value getCppStandardValue()                           { return getSetting (Ids::cppLanguageStandard); }
     String getCppStandardString() const                   { return settings[Ids::cppLanguageStandard]; }
+   
+    Value getPackagesValue()             { return getSetting (Ids::packages); }
+    String getPackagesString() const      { return settings [Ids::packages]; }
 
+    Value getGNUMakeValue()             { return getSetting (Ids::GNUMake); }
+    bool getGNUMakeBool() const      { return settings [Ids::GNUMake]; }
+    
     void createExporterProperties (PropertyListBuilder& properties) override
     {
         static const char* cppStandardNames[]  = { "C++03", "C++11", nullptr };
@@ -76,6 +82,12 @@ public:
                                                      StringArray (cppStandardNames),
                                                      Array<var>  (cppStandardValues)),
                         "The C++ standard to specify in the makefile");
+                                                                                                   
+        properties.add(new TextPropertyComponent (getPackagesValue(), "Packages", 256, true),
+                       "A list pkg-config(1) configured packages to add.");
+                                    
+        properties.add(new BooleanPropertyComponent (getGNUMakeValue(), "Use GNU Make syntax", "Enabled"),
+                       "Use GNU Make syntax");
     }
 
     //==============================================================================
@@ -165,8 +177,13 @@ private:
         StringArray searchPaths (extraSearchPaths);
         searchPaths.addArray (config.getHeaderSearchPaths());
 
-        out << " $(shell pkg-config --cflags freetype2)";
-//        searchPaths.insert (0, "/usr/include");
+        StringArray packages = getCleanedStringArray(StringArray::fromTokens(getPackagesString(), "\r\n\t "));
+        
+        if(packages.size())        
+          out <<  " `$(PKG_CONFIG) --cflags " << packages.joinIntoString(" ") << "`";
+          
+    //    out << " `$(PKG_CONFIG) --cflags freetype2`";
+    //    searchPaths.insert (0, "/usr/include");
 
         searchPaths = getCleanedStringArray (searchPaths);
 
@@ -186,10 +203,15 @@ private:
     {
         out << "  LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR)";
 
+        StringArray packages = getCleanedStringArray(StringArray::fromTokens(getPackagesString(), "\r\n\t "));
+
+        if(packages.size())        
+            out <<  " `$(PKG_CONFIG) --libs " << packages.joinIntoString(" ") << "`";
+        
         {
             StringArray flags (makefileExtraLinkerFlags);
 
-            if (makefileIsDLL)
+            if (makefileIsDLL || projectType.isDynamicLibrary())
                 flags.add ("-shared");
 
             if (! config.isDebug())
@@ -205,7 +227,7 @@ private:
             out << " -l" << mingwLibs[i];
 
         if (getProject().isConfigFlagEnabled ("JUCE_USE_CURL"))
-            out << " $(shell pkg-config --libs libcurl)";
+            out << " `$(PKG_CONFIG) --libs libcurl`";
 
         StringArray libraries;
         libraries.addTokens (getExternalLibrariesString(), ";", "\"'");
@@ -248,7 +270,7 @@ private:
         if (config.isDebug())
             out << " -g -ggdb";
 
-        if (makefileIsDLL)
+        if (makefileIsDLL || projectType.isDynamicLibrary())
             out << " -fPIC";
 
         out << " -O" << config.getGCCOptimisationFlag()
@@ -270,17 +292,27 @@ private:
 
         String targetName (replacePreprocessorTokens (config, config.getTargetBinaryNameString()));
 
-        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
+        if(makefileIsDLL || projectType.isDynamicLibrary()) {
+            if(targetName.startsWith("lib"))
+                targetName = targetName.substring(3);
+            if(targetName.endsWith("dll"))
+                targetName = targetName.substring(0, targetName.length() - 3);
+            if(targetName.endsWith(".") || targetName.endsWith("-"))
+                targetName = targetName.substring(0, targetName.length() - 1);
+                
+            targetName = targetName + (isWindows()?".dll":".so");
+        } else if (projectType.isStaticLibrary()) {
             targetName = getLibbedFilename (targetName);
-        else
-            targetName = targetName.upToLastOccurrenceOf (".", false, false) + makefileTargetSuffix;
+         } else {
+            targetName = targetName.upToLastOccurrenceOf (".", false, false) + (!makefileTargetSuffix.isEmpty() ? makefileTargetSuffix : ".exe");
+        }
 
         out << "  TARGET := " << escapeSpaces (targetName) << newLine;
 
         if (projectType.isStaticLibrary())
-            out << "  BLDCMD = ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
+            out << "  BLDCMD = $(CROSS)ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
         else
-            out << "  BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)" << newLine;
+            out << "  BLDCMD = $(CROSS)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(TARGET_ARCH)" << newLine;
 
         out << "  CLEANCMD = rm -rf $(OUTDIR)/$(TARGET) $(OBJDIR)" << newLine
             << "endif" << newLine
@@ -312,17 +344,44 @@ private:
             << "  CONFIG=" << escapeSpaces (getConfiguration(0)->getName()) << newLine
             << "endif" << newLine
             << newLine;
+            
+        out << "CC := gcc" << newLine
+            << "CXX := g++" << newLine
+            << "CHOST := $(shell $(CROSS)$(CC) -dumpmachine)" << newLine
+            << newLine;
 
+        out << "ifndef PKG_CONFIG" << newLine
+            << "  PKG_CONFIG := pkg-config" << newLine
+            << "endif" << newLine
+            << newLine;
+
+
+            out << "ifdef PKG_CONFIG_PATH" << newLine;
+
+        if(getGNUMakeBool())
+            out << "  PKG_CONFIG_CMD += PKG_CONFIG_PATH=\"$(subst $(EMPTY) $(EMPTY),:,$(PKG_CONFIG_PATH))\"" << newLine;
+        else
+            out << "  PKG_CONFIG_CMD += PKG_CONFIG_PATH=\"$$(set -- $(PKG_CONFIG_PATH); IFS=\":$$IFS\"; echo \"$$*\")\"" << newLine;
+
+        out << "endif" << newLine
+            << newLine
+            << "PKG_CONFIG_CMD += $(PKG_CONFIG)" << newLine
+            << newLine;
+            
+            
         for (ConstConfigIterator config (*this); config.next();)
             writeConfig (out, *config);
 
         writeObjects (out, files);
 
-        out << ".PHONY: clean" << newLine
+        out << ".PHONY: clean all" << newLine
             << newLine;
 
+        out << "all: $(OUTDIR)/$(TARGET)" << newLine
+            << newLine;
+            
         out << "$(OUTDIR)/$(TARGET): $(OBJECTS) $(RESOURCES)" << newLine
-            << "\t#@echo Linking " << projectName << newLine
+            << "#\t@echo Linking " << projectName << newLine
             << "\t-@mkdir -p $(BINDIR)" << newLine
             << "\t-@mkdir -p $(LIBDIR)" << newLine
             << "\t-@mkdir -p $(OUTDIR)" << newLine
@@ -330,12 +389,12 @@ private:
             << newLine;
 
         out << "clean:" << newLine
-            << "\t#@echo Cleaning " << projectName << newLine
+            << "#\t@echo Cleaning " << projectName << newLine
             << "\t$(CLEANCMD)" << newLine
             << newLine;
 
         out << "strip:" << newLine
-            << "\t#@echo Stripping " << projectName << newLine
+            << "#\t@echo Stripping " << projectName << newLine
             << "\t-@strip --strip-unneeded $(OUTDIR)/$(TARGET)" << newLine
             << newLine;
 
@@ -348,9 +407,9 @@ private:
                 out << "$(OBJDIR)/" << escapeSpaces (getObjectFileFor (files.getReference(i)))
                     << ": " << escapeSpaces (files.getReference(i).toUnixStyle()) << newLine
                     << "\t-@mkdir -p $(OBJDIR)" << newLine
-                    << "\t#@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
-                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t@$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
-                                                                         : "\t@$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
+                    << "#\t@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
+                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CROSS)$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
+                                                                         : "\t$(CROSS)$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
                     << newLine << newLine;
             }
         }

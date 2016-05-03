@@ -71,7 +71,10 @@ public:
 
         if (getTargetLocationString().isEmpty())
             getTargetLocationValue() = getDefaultBuildsRootFolder() + "CMake";
-
+            
+        if(getPackagesString().isEmpty())
+            getPackagesValue() = "freetype2";
+            
         initialiseDependencyPathValues(TargetOS::linux);
     }
 
@@ -149,23 +152,14 @@ public:
         return false;
     }
 
-    Value getCppStandardValue()
-    {
-        return getSetting(Ids::cppLanguageStandard);
-    }
-    String getCppStandardString() const
-    {
-        return settings[Ids::cppLanguageStandard];
-    }
+    Value getCppStandardValue() { return getSetting(Ids::cppLanguageStandard); }
+    String getCppStandardString() const { return settings[Ids::cppLanguageStandard]; }
 
-    Value getJuceLinkageValue()
-    {
-        return getSetting(Ids::juceLinkage);
-    }
-    String getJuceLinkageString() const
-    {
-        return settings[Ids::juceLinkage];
-    }
+    Value getJuceLinkageValue() { return getSetting(Ids::juceLinkage); }
+    String getJuceLinkageString() const { return settings[Ids::juceLinkage]; }
+
+    Value getPackagesValue()             { return getSetting (Ids::packages); }
+    String getPackagesString() const      { return settings [Ids::packages]; }   
 
     void createExporterProperties(PropertyListBuilder& props) override
     {
@@ -177,7 +171,10 @@ public:
                                               Array<var> (juceLinkageValues)),
                   "The linkage type for this configuration");
 
-
+                        
+                                                                            
+        props.add(new TextPropertyComponent (getPackagesValue(), "Packages", 256, true),
+                  "A list pkg-config(1) configured packages to add.");
     }
 
     //==============================================================================
@@ -745,6 +742,11 @@ private:
     }
 
     //==============================================================================
+    void writePackageChecks(OutputStream& out, Project& proj)  const
+    {
+    }
+    
+    //==============================================================================
     void writeWindowsChecks(OutputStream& out, Project& proj)  const
     {
         StringArray libs = mingwLibs;
@@ -937,6 +939,8 @@ private:
 
         out << newLine;
 
+        writePackageChecks(out, const_cast<CMakeProjectExporter*>(this)->getProject());
+        
         out << "set(LIBSOURCES";
         writeSources(out, libFiles);
         out << ")" << newLine;

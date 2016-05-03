@@ -46,6 +46,9 @@ public:
         if (getTargetLocationString().isEmpty())
             getTargetLocationValue() = getDefaultBuildsRootFolder() + "Linux";
 
+        if(getPackagesString().isEmpty())
+            getPackagesValue() = "freetype2";
+
         initialiseDependencyPathValues();
     }
 
@@ -80,6 +83,12 @@ public:
     Value getCppStandardValue()                         { return getSetting (Ids::cppLanguageStandard); }
     String getCppStandardString() const                 { return settings[Ids::cppLanguageStandard]; }
 
+    Value getPackagesValue()             { return getSetting (Ids::packages); }
+    String getPackagesString() const      { return settings [Ids::packages]; }
+
+    Value getGNUMakeValue()             { return getSetting (Ids::GNUMake); }
+    bool getGNUMakeBool() const      { return settings [Ids::GNUMake]; }
+
     void createExporterProperties (PropertyListBuilder& properties) override
     {
         static const char* cppStandardNames[]  = { "C++03",       "C++11",       "C++14",        nullptr };
@@ -90,6 +99,13 @@ public:
                                                      StringArray (cppStandardNames),
                                                      Array<var>  (cppStandardValues)),
                         "The C++ standard to specify in the makefile");
+
+
+        properties.add(new TextPropertyComponent (getPackagesValue(), "Packages", 256, true),
+                       "A list pkg-config(1) configured packages to add.");
+
+        properties.add(new BooleanPropertyComponent (getGNUMakeValue(), "Use GNU Make syntax", "Enabled"),
+                       "Use GNU Make syntax");
     }
 
     //==============================================================================
@@ -102,7 +118,8 @@ public:
         MemoryOutputStream mo;
         writeMakefile (mo, files);
 
-        overwriteFileIfDifferentOrThrow (getTargetFolder().getChildFile ("Makefile"), mo);
+        File fileName = getTargetFolder().getChildFile ("Makefile");
+        overwriteFileIfDifferentOrThrow (fileName, mo);
     }
 
     //==============================================================================
@@ -144,6 +161,7 @@ protected:
             props.add (new ChoicePropertyComponent (getArchitectureType(), "Architecture",
                                                     StringArray (archNames, numElementsInArray (archNames)),
                                                     Array<var> (archFlags, numElementsInArray (archFlags))));
+
         }
     };
 
@@ -191,8 +209,11 @@ private:
         StringArray searchPaths (extraSearchPaths);
         searchPaths.addArray (config.getHeaderSearchPaths());
 
-        out <<  " $(shell $(PKG_CONFIG) --cflags freetype2)";
-        //searchPaths.insert (0, "/usr/include");
+
+        StringArray packages = getCleanedStringArray(StringArray::fromTokens(getPackagesString(), "\r\n\t "));
+
+        if(packages.size())
+          out <<  (getGNUMakeBool()?"$(shell ":" `") << "$(PKG_CONFIG_CMD) --cflags " << packages.joinIntoString(" ") << (getGNUMakeBool()?")":"`");
 
         searchPaths = getCleanedStringArray (searchPaths);
 
@@ -211,6 +232,15 @@ private:
     void writeLinkerFlags (OutputStream& out, const BuildConfiguration& config) const
     {
         out << "  LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR)";
+
+        StringArray packages = getCleanedStringArray(StringArray::fromTokens(getPackagesString(), "\r\n\t "));
+
+/*        packages.removeString("freetype2");
+        packages.insert(0, "freetype2");
+        */
+
+        if(packages.size())
+            out <<  (getGNUMakeBool()?" $(shell ":" `") << "$(PKG_CONFIG_CMD) --libs " << packages.joinIntoString(" ") << (getGNUMakeBool()?")":"`");
 
         {
             StringArray flags (makefileExtraLinkerFlags);
@@ -296,8 +326,10 @@ private:
 
         String targetName (replacePreprocessorTokens (config, config.getTargetBinaryNameString()));
 
-        if (projectType.isStaticLibrary() || projectType.isDynamicLibrary())
+        if (projectType.isStaticLibrary())
             targetName = getLibbedFilename (targetName);
+       else if(  projectType.isDynamicLibrary())
+         targetName = targetName + ".so";
         else
             targetName = targetName.upToLastOccurrenceOf (".", false, false) + makefileTargetSuffix;
 
@@ -306,7 +338,7 @@ private:
         if (projectType.isStaticLibrary())
             out << "  BLDCMD = ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
         else
-            out << "  BLDCMD = $(CXX) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS) $(RESOURCES) $(TARGET_ARCH)" << newLine;
+            out << "  BLDCMD = $(CROSS)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(TARGET_ARCH)" << newLine;
 
         out << "  CLEANCMD = rm -rf $(OUTDIR)/$(TARGET) $(OBJDIR)" << newLine
             << "endif" << newLine
@@ -335,19 +367,41 @@ private:
             << newLine;
 
         out << "ifndef CONFIG" << newLine
-            << "  CONFIG=" << escapeSpaces (getConfiguration(0)->getName()) << newLine
-            << "endif" << newLine
-            << newLine;
-            
-        out << "ifeq ($(PKG_CONFIG),)" << newLine
-            << "PKG_CONFIG := pkg-config" <<newLine
+            << "  CONFIG := " << escapeSpaces (getConfiguration(0)->getName()) << newLine
             << "endif" << newLine
             << newLine;
 
-        out << "ifneq ($(SYSROOT),)" << newLine
-            << "CFLAGS += --sysroot=$(SYSROOT)" << newLine
-            << "LDFLAGS += --sysroot=$(SYSROOT)" << newLine
+        out << "CC := gcc" << newLine
+            << "CXX := g++" << newLine
+            << "CHOST := $(shell $(CROSS)$(CC) -dumpmachine)" << newLine
+            << newLine;
+
+
+        out << "ifndef PKG_CONFIG" << newLine
+            << "  PKG_CONFIG := pkg-config" << newLine
             << "endif" << newLine
+            << newLine;
+
+        out << "ifdef SYSROOT" << newLine
+            << "  CFLAGS += --sysroot=$(SYSROOT)" << newLine
+            << "  LDFLAGS += --sysroot=$(SYSROOT)" << newLine
+            << "  PKG_CONFIG_PATH += $(SYSROOT)/usr/lib/$(CHOST)/pkgconfig" << newLine
+            << "  PKG_CONFIG_PATH += $(SYSROOT)/usr/lib/pkgconfig" << newLine
+            //<< "  PKG_CONFIG_PATH := $(patsubst $(SYSROOT)%,%,$(SYSROOT)/usr/lib/$(CHOST)/pkgconfig):$(patsubst $(SYSROOT)%,%,$(SYSROOT)/usr/lib/pkgconfig)" << newLine
+            << "  PKG_CONFIG_CMD += PKG_CONFIG_SYSROOT_DIR=\"$(SYSROOT)\"" << newLine
+            << "endif" << newLine
+            << newLine;
+
+        out << "ifdef PKG_CONFIG_PATH" << newLine;
+
+        if(getGNUMakeBool())
+            out << "  PKG_CONFIG_CMD += PKG_CONFIG_PATH=\"$(subst $(EMPTY) $(EMPTY),:,$(PKG_CONFIG_PATH))\"" << newLine;
+        else
+            out << "  PKG_CONFIG_CMD += PKG_CONFIG_PATH=\"$$(set -- $(PKG_CONFIG_PATH); IFS=\":$$IFS\"; echo \"$$*\")\"" << newLine;
+
+        out << "endif" << newLine
+            << newLine
+            << "PKG_CONFIG_CMD += $(PKG_CONFIG)" << newLine
             << newLine;
 
         for (ConstConfigIterator config (*this); config.next();)
@@ -355,11 +409,14 @@ private:
 
         writeObjects (out, files);
 
-        out << ".PHONY: clean" << newLine
+        out << ".PHONY: clean all" << newLine
             << newLine;
 
+        out << "all: $(OUTDIR)/$(TARGET)" << newLine
+            << newLine;
+            
         out << "$(OUTDIR)/$(TARGET): $(OBJECTS) $(RESOURCES)" << newLine
-//            << "\t#@echo Linking " << projectName << newLine
+            << "#\t@echo Linking " << projectName << newLine
             << "\t-@mkdir -p $(BINDIR)" << newLine
             << "\t-@mkdir -p $(LIBDIR)" << newLine
             << "\t-@mkdir -p $(OUTDIR)" << newLine
@@ -367,12 +424,12 @@ private:
             << newLine;
 
         out << "clean:" << newLine
-//            << "\t#@echo Cleaning " << projectName << newLine
+            << "#\t@echo Cleaning " << projectName << newLine
             << "\t$(CLEANCMD)" << newLine
             << newLine;
 
         out << "strip:" << newLine
-//            << "\t#@echo Stripping " << projectName << newLine
+            << "#\t@echo Stripping " << projectName << newLine
             << "\t-strip --strip-unneeded $(OUTDIR)/$(TARGET)" << newLine
             << newLine;
 
@@ -385,9 +442,9 @@ private:
                 out << "$(OBJDIR)/" << escapeSpaces (getObjectFileFor (files.getReference(i)))
                     << ": " << escapeSpaces (files.getReference(i).toUnixStyle()) << newLine
                     << "\t-@mkdir -p $(OBJDIR)" << newLine
-//                    << "\t#@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
-                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
-                                                                         : "\t$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
+//                    << "#\t@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
+                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CROSS)$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
+                                                                         : "\t$(CROSS)$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
                     << newLine << newLine;
             }
         }
