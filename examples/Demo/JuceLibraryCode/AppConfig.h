@@ -217,7 +217,7 @@
 #endif
 
 #ifndef    JUCE_USE_CAMERA
- //#define JUCE_USE_CAMERA
+ #define   JUCE_USE_CAMERA 1
 #endif
 
 
