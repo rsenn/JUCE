@@ -213,7 +213,7 @@ private:
         StringArray packages = getCleanedStringArray(StringArray::fromTokens(getPackagesString(), "\r\n\t "));
 
         if(packages.size())
-          out <<  (getGNUMakeBool()?"$(shell ":" `") << "$(PKG_CONFIG_CMD) --cflags " << packages.joinIntoString(" ") << (getGNUMakeBool()?")":"`");
+          out <<  (getGNUMakeBool()?" $(shell ":" `") << "$(PKG_CONFIG_CMD) --cflags " << packages.joinIntoString(" ") << (getGNUMakeBool()?")":"`");
 
         searchPaths = getCleanedStringArray (searchPaths);
 
