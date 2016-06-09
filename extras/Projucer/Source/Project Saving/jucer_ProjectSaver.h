@@ -338,9 +338,16 @@ private:
             {
                 if (! module->isValid())
                 {
-                    addError ("At least one of your JUCE module paths is invalid!\n"
-                              "Please go to Config -> Modules and ensure each path points to the correct JUCE modules folder.");
+                    String errmsg = "At least one of your JUCE module paths is invalid!\n"
+                              "Please go to Config -> Modules and ensure each path points to the correct JUCE modules folder.";
+                    errmsg = "Module not found: " + //module->getFolder().getFullPathName() + "/" + 
+                           module->getID() + "\n";
+                    addError (errmsg);
                     return;
+                } else  {
+                File folder = module->getFolder();
+                std::cerr << "MODULE: " << (folder ==  File::nonexistent ? "" : (module->getFolder().getFullPathName() 
+                    /*+ "/" + module->getID()*/)) << std::endl;
                 }
             }
             else

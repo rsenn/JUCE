@@ -158,6 +158,7 @@ private:
     {
         StringPairArray defines;
         defines.set ("__MINGW__", "1");
+        defines.set ("JUCE_MINGW", "1");
 
         if (config.isDebug())
         {
@@ -180,7 +181,7 @@ private:
         StringArray packages = getCleanedStringArray(StringArray::fromTokens(getPackagesString(), "\r\n\t "));
         
         if(packages.size())        
-          out <<  " `$(PKG_CONFIG) --cflags " << packages.joinIntoString(" ") << "`";
+          out <<  (getGNUMakeBool()?" $(shell ":" `") << "$(PKG_CONFIG) --cflags " << packages.joinIntoString(" ") << (getGNUMakeBool()?")":"`");
           
     //    out << " `$(PKG_CONFIG) --cflags freetype2`";
     //    searchPaths.insert (0, "/usr/include");
@@ -201,12 +202,13 @@ private:
 
     void writeLinkerFlags (OutputStream& out, const BuildConfiguration& config) const
     {
-        out << "  LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR)";
+       out << "  LDFLAGS += $(TARGET_ARCH)" << newLine 
+            << "  LIBS += -L$(BINDIR) -L$(LIBDIR)";
 
         StringArray packages = getCleanedStringArray(StringArray::fromTokens(getPackagesString(), "\r\n\t "));
 
         if(packages.size())        
-            out <<  " `$(PKG_CONFIG) --libs " << packages.joinIntoString(" ") << "`";
+            out <<  (getGNUMakeBool()?" $(shell ":" `") << "$(PKG_CONFIG_CMD) --libs " << packages.joinIntoString(" ") << (getGNUMakeBool()?")":"`");
         
         {
             StringArray flags (makefileExtraLinkerFlags);
@@ -233,8 +235,15 @@ private:
         libraries.addTokens (getExternalLibrariesString(), ";", "\"'");
         libraries.removeEmptyStrings();
 
-        if (libraries.size() != 0)
+                    
+        if (const_cast<MinGWProjectExporter*>(this)->getProject().getModules().isModuleEnabled("juce_opengl"))
+           libraries.add("opengl32");
+        
+         std::cerr << "Libraries: " << libraries.joinIntoString(" ") << std::endl;
+         
+        if (libraries.size() != 0) {
             out << " -l" << replacePreprocessorTokens (config, libraries.joinIntoString (" -l")).trim();
+        }
 
         out << " " << replacePreprocessorTokens (config, getExtraLinkerFlagsString()).trim()
             << newLine;
@@ -242,7 +251,7 @@ private:
 
     void writeConfig (OutputStream& out, const BuildConfiguration& config) const
     {
-        const String buildDirName ("build");
+        const String buildDirName ("$(CHOST)");
         const String intermediatesDirName (buildDirName + "/intermediate/" + config.getName());
         String outputDir (buildDirName);
 
@@ -270,9 +279,9 @@ private:
         if (config.isDebug())
             out << " -g -ggdb";
 
-        if (makefileIsDLL || projectType.isDynamicLibrary())
+/*        if (makefileIsDLL || projectType.isDynamicLibrary())
             out << " -fPIC";
-
+*/
         out << " -O" << config.getGCCOptimisationFlag()
             << (" "  + replacePreprocessorTokens (config, getExtraCompilerFlagsString())).trimEnd()
             << newLine;
@@ -310,9 +319,9 @@ private:
         out << "  TARGET := " << escapeSpaces (targetName) << newLine;
 
         if (projectType.isStaticLibrary())
-            out << "  BLDCMD = $(CROSS)ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
+            out << "  BLDCMD = $(CROSS_COMPILE)ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
         else
-            out << "  BLDCMD = $(CROSS)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(TARGET_ARCH)" << newLine;
+            out << "  BLDCMD = $(CROSS_COMPILE)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(TARGET_ARCH) $(LIBS)" << newLine;
 
         out << "  CLEANCMD = rm -rf $(OUTDIR)/$(TARGET) $(OBJDIR)" << newLine
             << "endif" << newLine
@@ -347,7 +356,7 @@ private:
             
         out << "CC := gcc" << newLine
             << "CXX := g++" << newLine
-            << "CHOST := $(shell $(CROSS)$(CC) -dumpmachine)" << newLine
+            << "CHOST := $(shell $(CROSS_COMPILE)$(CC) -dumpmachine)" << newLine
             << newLine;
 
         out << "ifndef PKG_CONFIG" << newLine
@@ -408,8 +417,8 @@ private:
                     << ": " << escapeSpaces (files.getReference(i).toUnixStyle()) << newLine
                     << "\t-@mkdir -p $(OBJDIR)" << newLine
                     << "#\t@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
-                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CROSS)$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
-                                                                         : "\t$(CROSS)$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
+                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CROSS_COMPILE)$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
+                                                                         : "\t$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
                     << newLine << newLine;
             }
         }

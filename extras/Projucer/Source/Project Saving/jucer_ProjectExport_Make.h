@@ -277,7 +277,7 @@ private:
 
     void writeConfig (OutputStream& out, const BuildConfiguration& config) const
     {
-        const String buildDirName ("build");
+        const String buildDirName ("$(CHOST)");
         const String intermediatesDirName (buildDirName + "/intermediate/" + config.getName());
         String outputDir (buildDirName);
 
@@ -331,10 +331,13 @@ private:
             targetName = getLibbedFilename (targetName);
        } else if(makefileIsDLL || projectType.isDynamicLibrary()) {
          targetName = targetName + ".so";
-         if(!targetName.startsWith("lib"))
-           targetName = "lib" + targetName;
+         
+         if(!projectType.isAudioPlugin()) { 
+             if(!targetName.startsWith("lib"))
+               targetName = "lib" + targetName;
+         }
            
-        } else {
+    } else {
             targetName = targetName.upToLastOccurrenceOf (".", false, false) + makefileTargetSuffix;
         }
 
@@ -343,7 +346,7 @@ private:
         if (projectType.isStaticLibrary())
             out << "  BLDCMD = ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
         else
-            out << "  BLDCMD = $(CROSS)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(TARGET_ARCH) $(LIBS)" << newLine;
+            out << "  BLDCMD = $(CROSS_COMPILE)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(TARGET_ARCH) $(LIBS)" << newLine;
 
         out << "  CLEANCMD = rm -rf $(OUTDIR)/$(TARGET) $(OBJDIR)" << newLine
             << "endif" << newLine
@@ -378,7 +381,7 @@ private:
 
         out << "CC := gcc" << newLine
             << "CXX := g++" << newLine
-            << "CHOST := $(shell $(CROSS)$(CC) -dumpmachine)" << newLine
+            << "CHOST := $(shell $(CROSS_COMPILE)$(CC) -dumpmachine)" << newLine
             << newLine;
 
 
@@ -469,8 +472,8 @@ private:
                     << ": " << escapeSpaces (files.getReference(i).toUnixStyle()) << newLine
                     << "\t-@mkdir -p $(OBJDIR)" << newLine
 //                    << "#\t@echo \"Compiling " << files.getReference(i).getFileName() << "\"" << newLine
-                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CROSS)$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
-                                                                         : "\t$(CROSS)$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
+                    << (files.getReference(i).hasFileExtension ("c;s;S") ? "\t$(CROSS_COMPILE)$(CC) $(CFLAGS) -o \"$@\" -c \"$<\""
+                                                                         : "\t$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o \"$@\" -c \"$<\"")
                     << newLine << newLine;
             }
         }

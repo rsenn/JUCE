@@ -42,6 +42,7 @@ PropertiesFile& getGlobalProperties()
 StoredSettings::StoredSettings()
     : appearance (true), projectDefaults ("PROJECT_DEFAULT_SETTINGS")
 {
+    recentFiles.setMaxNumberOfItems(100);
     reload();
     projectDefaults.addListener (this);
 }
