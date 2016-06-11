@@ -117,6 +117,7 @@ namespace Ids
     DECLARE_ID (generateManifest);
     DECLARE_ID (useRuntimeLibDLL);
     DECLARE_ID (wholeProgramOptimisation);
+    DECLARE_ID (enableIncrementalLinking);
     DECLARE_ID (buildVST);
     DECLARE_ID (bundleIdentifier);
     DECLARE_ID (aaxIdentifier);
@@ -225,9 +226,6 @@ namespace Ids
     DECLARE_ID (classDecl);
     DECLARE_ID (initialisers);
     DECLARE_ID (destructors);
-    DECLARE_ID (packages);
-    DECLARE_ID (GNUMake);
-    DECLARE_ID (juceLinkage);
 
     const Identifier ID ("id");
     const Identifier ID_uppercase ("ID");

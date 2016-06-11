@@ -68,8 +68,7 @@
       </MODULEPATHS>
     </VS2015>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile" extraCompilerFlags="-std=c++11"
-                extraLinkerFlags="" bigIcon="OCyr5F" smallIcon="" vstFolder=""
-                packages="freetype2">
+                extraLinkerFlags="" bigIcon="OCyr5F" smallIcon="" vstFolder="">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/&#10;" isDebug="1" optimisation="1"
                        targetName="Projucer" headerPath=""/>
@@ -86,21 +85,6 @@
         <MODULEPATH id="juce_core" path="../../modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <MINGW_MAKE targetFolder="Builds/MinGW">
-      <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="Projucer"/>
-        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="Projucer"/>
-      </CONFIGURATIONS>
-      <MODULEPATHS>
-        <MODULEPATH id="juce_gui_extra" path="../../modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../modules"/>
-        <MODULEPATH id="juce_graphics" path="../../modules"/>
-        <MODULEPATH id="juce_events" path="../../modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../modules"/>
-        <MODULEPATH id="juce_cryptography" path="../../modules"/>
-        <MODULEPATH id="juce_core" path="../../modules"/>
-      </MODULEPATHS>
-    </MINGW_MAKE>
   </EXPORTFORMATS>
   <MAINGROUP name="Projucer" id="NhrJq66R">
     <GROUP id="vD0TyHx" name="Application">

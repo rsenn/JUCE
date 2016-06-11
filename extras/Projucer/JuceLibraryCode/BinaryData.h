@@ -105,6 +105,12 @@ namespace BinaryData
     extern const char*   projectIconXcodeIOS_png;
     const int            projectIconXcodeIOS_pngSize = 18111;
 
+    extern const char*   projucer_EULA_txt;
+    const int            projucer_EULA_txtSize = 14390;
+
+    extern const char*   projucer_login_bg_svg;
+    const int            projucer_login_bg_svgSize = 5046;
+
     extern const char*   RecentFilesMenuTemplate_nib;
     const int            RecentFilesMenuTemplate_nibSize = 2842;
 
@@ -142,7 +148,7 @@ namespace BinaryData
     extern const char* namedResourceList[];
 
     // Number of elements in the namedResourceList array.
-    const int namedResourceListSize = 44;
+    const int namedResourceListSize = 45;
 
     // If you provide the name of one of the binary resource variables above, this function will
     // return the corresponding data and its size (or a null pointer if the name isn't found).

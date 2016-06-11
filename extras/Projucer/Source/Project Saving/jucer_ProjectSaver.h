@@ -338,16 +338,9 @@ private:
             {
                 if (! module->isValid())
                 {
-                    String errmsg = "At least one of your JUCE module paths is invalid!\n"
-                              "Please go to Config -> Modules and ensure each path points to the correct JUCE modules folder.";
-                    errmsg = "Module not found: " + //module->getFolder().getFullPathName() + "/" + 
-                           module->getID() + "\n";
-                    addError (errmsg);
+                    addError ("At least one of your JUCE module paths is invalid!\n"
+                              "Please go to Config -> Modules and ensure each path points to the correct JUCE modules folder.");
                     return;
-                } else  {
-                File folder = module->getFolder();
-                std::cerr << "MODULE: " << (folder ==  File::nonexistent ? "" : (module->getFolder().getFullPathName() 
-                    /*+ "/" + module->getID()*/)) << std::endl;
                 }
             }
             else
@@ -399,10 +392,15 @@ private:
             if (type.isAudioPlugin() || type.isDynamicLibrary())
                 isStandaloneApplication = 0;
 
-            out << "//==============================================================================" << newLine;
-            out << "#ifndef    JUCE_STANDALONE_APPLICATION" << newLine;
-            out << " #define   JUCE_STANDALONE_APPLICATION " << isStandaloneApplication << newLine;
-            out << "#endif" << newLine
+            // Fabian TODO
+            out << "//==============================================================================" << newLine
+                << "#ifndef    JUCE_STANDALONE_APPLICATION" << newLine
+                << " #ifdef JucePlugin_Build_Standalone" << newLine
+                << "  #define  JUCE_STANDALONE_APPLICATION JucePlugin_Build_Standalone" << newLine
+                << " #else" << newLine
+                << "  #define  JUCE_STANDALONE_APPLICATION " << isStandaloneApplication << newLine
+                << " #endif" << newLine
+                << "#endif" << newLine
                 << newLine
                 << "#define JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED 1" << newLine;
         }

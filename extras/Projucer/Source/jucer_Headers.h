@@ -25,7 +25,7 @@
 #ifndef __JUCER_HEADERS_JUCEHEADER__
 #define __JUCER_HEADERS_JUCEHEADER__
 
-#include "JuceHeader.h"
+#include "../JuceLibraryCode/JuceHeader.h"
 #include "Application/jucer_CommonHeaders.h"
 
 #if JUCE_DEBUG
