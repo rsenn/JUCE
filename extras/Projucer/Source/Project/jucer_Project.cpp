@@ -59,8 +59,6 @@ Project::Project (const File& f)
     setChangedFlag (false);
 
     projectRoot.addListener (this);
-
-    modificationTime = getFile().getLastModificationTime();
 }
 
 Project::~Project()
@@ -260,14 +258,23 @@ static int getBuiltJuceVersion()
          + JUCE_BUILDNUMBER;
 }
 
-static bool isAnyModuleNewerThanProjucer (const OwnedArray<ModuleDescription>& modules)
+static String getJuceVersionString(int ver) {
+  String s(ver % 1000);
+  ver /= 1000;
+  s = String(ver % 100) + "." + s;
+  ver /= 100;
+  s = String(ver) + "." + s;
+  return s;
+}
+
+static bool isAnyModuleNewerThanProjucer (const OwnedArray<ModuleDescription>& modules, int& newerVer)
 {
     for (int i = modules.size(); --i >= 0;)
     {
         const ModuleDescription* m = modules.getUnchecked(i);
 
         if (m->getID().startsWith ("juce_")
-              && getJuceVersion (m->getVersion()) > getBuiltJuceVersion())
+              && (newerVer = getJuceVersion (m->getVersion())) > getBuiltJuceVersion())
             return true;
     }
 
@@ -276,18 +283,21 @@ static bool isAnyModuleNewerThanProjucer (const OwnedArray<ModuleDescription>& m
 
 void Project::warnAboutOldProjucerVersion()
 {
+   int moduleVer = 0;
     ModuleList available;
     available.scanAllKnownFolders (*this);
 
-    if (isAnyModuleNewerThanProjucer (available.modules))
+    if (isAnyModuleNewerThanProjucer (available.modules, moduleVer))
     {
+     String versions = "Versions (Projucer: " + getJuceVersionString(getBuiltJuceVersion()) + ", Module: " + getJuceVersionString(moduleVer) +")";
         if (ProjucerApplication::getApp().isRunningCommandLine)
-            std::cout <<  "WARNING! This version of the Projucer is out-of-date!" << std::endl;
+            std::cout <<  "WARNING! This version of the Projucer is out-of-date!" << std::endl
+              << versions << std::endl;
         else
             AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
                                               "Projucer",
                                               "This version of the Projucer is out-of-date!"
-                                              "\n\n"
+                                              + versions + "\n\n"
                                               "Always make sure that you're running the very latest version, "
                                               "preferably compiled directly from the JUCE repository that you're working with!");
     }
@@ -375,17 +385,6 @@ void Project::valueTreeChildAdded (ValueTree&, ValueTree&)          { changed();
 void Project::valueTreeChildRemoved (ValueTree&, ValueTree&, int)   { changed(); }
 void Project::valueTreeChildOrderChanged (ValueTree&, int, int)     { changed(); }
 void Project::valueTreeParentChanged (ValueTree&)                   {}
-
-//==============================================================================
-bool Project::hasProjectBeenModified()
-{
-    Time newModificationTime = getFile().getLastModificationTime();
-    Time oldModificationTime = modificationTime;
-
-    modificationTime = newModificationTime;
-
-    return (newModificationTime.toMilliseconds() > (oldModificationTime.toMilliseconds() + 1000LL));
-}
 
 //==============================================================================
 File Project::resolveFilename (String filename) const
@@ -501,9 +500,6 @@ void Project::createPropertyEditors (PropertyListBuilder& props)
 
     props.add (new BooleanPropertyComponent (shouldIncludeBinaryInAppConfig(), "Include Binary",
                                              "Include BinaryData.h in the AppConfig.h file"));
-
-    props.add (new TextPropertyComponent (binaryDataNamespace(), "BinaryData Namespace", 256, false),
-                                          "The namespace containing the binary assests. If left empty this defaults to \"BinaryData\".");
 
     props.add (new TextPropertyComponent (getProjectPreprocessorDefs(), "Preprocessor definitions", 32768, true),
                "Global preprocessor definitions. Use the form \"NAME1=value NAME2=value\", using whitespace, commas, or "
@@ -1137,12 +1133,9 @@ String Project::getAUMainTypeString()
 
     if (s.isEmpty())
     {
-        // Unfortunately, Rez uses a header where kAudioUnitType_MIDIProcessor is undefined
-        // Use aumi instead.
-        if      (getPluginIsMidiEffectPlugin().getValue()) s = "'aumi'";
-        else if (getPluginIsSynth().getValue())            s = "kAudioUnitType_MusicDevice";
-        else if (getPluginWantsMidiInput().getValue())     s = "kAudioUnitType_MusicEffect";
-        else                                               s = "kAudioUnitType_Effect";
+        if (getPluginIsSynth().getValue())              s = "kAudioUnitType_MusicDevice";
+        else if (getPluginWantsMidiInput().getValue())  s = "kAudioUnitType_MusicEffect";
+        else                                            s = "kAudioUnitType_Effect";
     }
 
     return s;
@@ -1231,13 +1224,15 @@ void Project::createExporterForCurrentPlatform()
 String Project::getFileTemplate (const String& templateName)
 {
     int dataSize;
+    const char* data = BinaryData::getNamedResource (templateName.toUTF8(), dataSize);
 
-    if (const char* data = BinaryData::getNamedResource (templateName.toUTF8(), dataSize))
-        return String::fromUTF8 (data, dataSize);
+    if (data == nullptr)
+    {
+        jassertfalse;
+        return String::empty;
+    }
 
-    jassertfalse;
-    return String();
-
+    return String::fromUTF8 (data, dataSize);
 }
 
 //==============================================================================
