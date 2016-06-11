@@ -346,7 +346,7 @@ private:
         if (projectType.isStaticLibrary())
             out << "  BLDCMD = ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
         else
-            out << "  BLDCMD = $(CROSS_COMPILE)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(TARGET_ARCH) $(LIBS)" << newLine;
+            out << "  BLDCMD = $(CROSS_COMPILE)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(LIBS)" << newLine;
 
         out << "  CLEANCMD = rm -rf $(OUTDIR)/$(TARGET) $(OBJDIR)" << newLine
             << "endif" << newLine
