@@ -26,6 +26,10 @@
   ==============================================================================
 */
 
+#ifdef __GNUC__
+#include <intrin.h>
+#endif
+
 void Logger::outputDebugString (const String& text)
 {
     OutputDebugString ((text + "\n").toWideCharPointer());
