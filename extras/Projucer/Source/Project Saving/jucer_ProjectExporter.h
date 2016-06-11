@@ -76,6 +76,9 @@ public:
     virtual bool isMakefile() const      = 0;
     virtual bool isAndroidStudio() const = 0;
     virtual bool isAndroidAnt() const    = 0;
+    virtual bool isCMake() const         { return false; }
+    virtual bool isMinGWMakefile() const { return false; }
+    virtual bool isQtCreator() const     { return false; }
 
     // operating system targeted by exporter
     virtual bool isAndroid() const = 0;

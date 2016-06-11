@@ -26,6 +26,7 @@
 #include "../Project/jucer_Project.h"
 #include "../Project/jucer_Module.h"
 #include "jucer_CommandLine.h"
+#include "../Project Saving/jucer_ProjectExporter.h"
 
 
 //==============================================================================
@@ -115,6 +116,39 @@ namespace
 
         if (! temp.overwriteTargetFileWithTemporary())
             throw CommandLineError ("!!! ERROR Couldn't write to file!");
+    }
+
+    static bool projectHasExporter(Project& p, const String& name) {
+      for(Project::ExporterIterator exporter (p); exporter.next(); ) {
+        if(exporter->getName() == name) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    static ValueTree* getProjectExporter(Project& p, const String& name) {
+      for(Project::ExporterIterator exporter (p); exporter.next(); ) {
+        if(exporter->getName() == name) {
+          return &exporter->settings;
+        }
+      }
+      return nullptr;
+    }
+
+    //==============================================================================
+
+    static int listExporterNames ()
+    {
+
+      std::cerr << "Exporter names:" << std::endl;
+
+      std::cout
+         <<  ProjectExporter::getExporterNames().joinIntoString("\n")
+         << std::endl;
+
+
+      return 0;
     }
 
     //==============================================================================
@@ -379,7 +413,7 @@ namespace
                     const int tabPos = line.indexOfChar ('\t');
                     if (tabPos < 0)
                         break;
-                    
+
                     const int spacesPerTab = 4;
                     const int spacesNeeded = spacesPerTab - (tabPos % spacesPerTab);
                     line = line.replaceSection (tabPos, 1, String::repeatedString (" ", spacesNeeded));
@@ -598,6 +632,87 @@ namespace
     }
 
     //==============================================================================
+
+    static void addExporterToProject (const StringArray& args )
+    {
+        checkArgumentCount (args, 3);
+
+        String fileName = args[args.size()-1];
+        int added = 0;
+
+        LoadedProject proj (fileName);
+
+        for(int i = 1; i < args.size()-1; ++i) {
+          String exportName = args[i].unquoted();
+
+          if(!ProjectExporter::getExporterNames().contains(exportName))
+            throw CommandLineError ("No such exporter: " +  exportName);
+
+          if(projectHasExporter(*proj.project, exportName)) {
+            std::cerr << "Already have an exporter: " << exportName << std::endl;
+          } else {
+            std::cerr << "Adding exporter: "  << exportName << std::endl;
+            proj.project->addNewExporter(exportName);
+            ++added;
+          }
+        }
+
+        if(added > 0) {
+          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
+
+					proj.save(false);
+				}
+    }
+
+    //==============================================================================
+
+    static void getProjectExporters (const StringArray& args )
+    {
+        checkArgumentCount (args, 2);
+
+        LoadedProject proj (args[1]);
+
+        std::cerr << "Project " << proj.project->getFile().getFullPathName() << " exporters:" << std::endl;
+
+        for (Project::ExporterIterator exporter (*proj.project); exporter.next(); ) {
+					std::cout << exporter->getName() << std::endl;
+        }
+    }
+    //==============================================================================
+
+    static void removeProjectExporter (const StringArray& args )
+    {
+        checkArgumentCount (args, 3);
+
+        String fileName = args[args.size()-1];
+        int remove = 0;
+
+        LoadedProject proj (fileName);
+
+        for(int i = 1; i < args.size()-1; ++i) {
+          String exportName = args[i].unquoted();
+
+					ValueTree* settings = getProjectExporter(*proj.project, exportName);
+
+					if(settings) {
+						ValueTree parent (settings->getParent());
+						parent.removeChild (*settings, nullptr);
+						remove++;
+					} else {
+        std::cerr << "No such exporter: " << exportName  << std::endl;
+					}
+        }
+
+				if(remove) {
+					//proj.project->exporters.removeChild(exportName);
+
+          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
+
+					proj.save(false);
+				}
+    }
+
+    //==============================================================================
     static void showHelp()
     {
         hideDockIcon();
@@ -616,6 +731,20 @@ namespace
                   << std::endl
                   << " " << appName << " --get-version project_file" << std::endl
                   << "    Returns the version number of a project." << std::endl
+                  << std::endl
+                  << " " << appName << " --list-exporter-names" << std::endl
+                  << "    Gets all available exporter types." << std::endl
+                  << std::endl
+                  << " " << appName << " --get-exporters project_file" << std::endl
+                  << "    Gets exporters of the specified project." << std::endl
+                  << std::endl
+                  << " " << appName << " --add-exporter name project_file" << std::endl
+                  << "    Adds an exporter and resaves." << std::endl
+                  << std::endl
+                  << " " << appName << " --remove-exporter name project_file" << std::endl
+                  << "    Removes an exporter and resaves." << std::endl
+                  << std::endl
+                  << " " << appName << " --resave-resources project_file" << std::endl
                   << std::endl
                   << " " << appName << " --set-version version_number project_file" << std::endl
                   << "    Updates the version number in a project." << std::endl
@@ -680,6 +809,10 @@ int performCommandLine (const String& commandLine)
         if (matchArgument (command, "tidy-divider-comments"))    { tidyDividerComments (args); return 0; }
         if (matchArgument (command, "fix-broken-include-paths")) { fixRelativeIncludePaths (args); return 0; }
         if (matchArgument (command, "obfuscated-string-code"))   { generateObfuscatedStringCode (args); return 0; }
+        if (matchArgument (command, "list-exporter-names"))      { listExporterNames (); return 0; }
+        if (matchArgument (command, "get-exporters"))            { getProjectExporters (args); return 0; }
+        if (matchArgument (command, "add-exporter"))             { addExporterToProject (args); return 0; }
+        if (matchArgument (command, "remove-exporter"))         { removeProjectExporter (args); return 0; }
     }
     catch (const CommandLineError& error)
     {

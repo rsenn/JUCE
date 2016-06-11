@@ -225,6 +225,9 @@ namespace Ids
     DECLARE_ID (classDecl);
     DECLARE_ID (initialisers);
     DECLARE_ID (destructors);
+    DECLARE_ID (packages);
+    DECLARE_ID (GNUMake);
+    DECLARE_ID (juceLinkage);
 
     const Identifier ID ("id");
     const Identifier ID_uppercase ("ID");

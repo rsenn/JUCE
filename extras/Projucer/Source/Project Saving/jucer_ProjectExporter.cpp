@@ -27,6 +27,9 @@
 #include "jucer_ProjectSaver.h"
 
 #include "jucer_ProjectExport_Make.h"
+#include "jucer_ProjectExport_MinGWMake.h"
+#include "jucer_ProjectExport_CMake.h"
+#include "jucer_ProjectExport_QtCreator.h"
 #include "jucer_ProjectExport_MSVC.h"
 #include "jucer_ProjectExport_XCode.h"
 #include "jucer_ProjectExport_AndroidBase.h"
@@ -55,10 +58,14 @@ Array<ProjectExporter::ExporterTypeInfo> ProjectExporter::getExporterTypes()
     addType (types, MSVCProjectExporterVC2008::getName(),        BinaryData::projectIconVisualStudio_png,   BinaryData::projectIconVisualStudio_pngSize);
     addType (types, MSVCProjectExporterVC2005::getName(),        BinaryData::projectIconVisualStudio_png,   BinaryData::projectIconVisualStudio_pngSize);
     addType (types, MakefileProjectExporter::getNameLinux(),     BinaryData::projectIconLinuxMakefile_png,  BinaryData::projectIconLinuxMakefile_pngSize);
+    addType (types, MinGWProjectExporter::getName(),   BinaryData::projectIconLinuxMakefile_png,  BinaryData::projectIconLinuxMakefile_pngSize);
     addType (types, AndroidStudioProjectExporter::getName(),     BinaryData::projectIconAndroid_png,        BinaryData::projectIconAndroid_pngSize);
     addType (types, AndroidAntProjectExporter::getName(),        BinaryData::projectIconAndroid_png,        BinaryData::projectIconAndroid_pngSize);
     addType (types, CodeBlocksProjectExporter::getNameWindows(), BinaryData::projectIconCodeblocks_png,     BinaryData::projectIconCodeblocks_pngSize);
     addType (types, CodeBlocksProjectExporter::getNameLinux(),   BinaryData::projectIconCodeblocks_png,     BinaryData::projectIconCodeblocks_pngSize);
+    addType (types, CMakeProjectExporter::getName(),   BinaryData::projectIconLinuxMakefile_png,  BinaryData::projectIconLinuxMakefile_pngSize);
+    addType (types, QtCreatorProjectExporter::getName(),         BinaryData::projectIconLinuxMakefile_png,  BinaryData::projectIconLinuxMakefile_pngSize);
+
 
     return types;
 }
@@ -82,6 +89,9 @@ ProjectExporter* ProjectExporter::createNewExporter (Project& project, const int
         case 10:    exp = new AndroidAntProjectExporter    (project, ValueTree (AndroidAntProjectExporter    ::getValueTreeTypeName())); break;
         case 11:    exp = new CodeBlocksProjectExporter    (project, ValueTree (CodeBlocksProjectExporter    ::getValueTreeTypeName (CodeBlocksProjectExporter::windowsTarget)), CodeBlocksProjectExporter::windowsTarget); break;
         case 12:    exp = new CodeBlocksProjectExporter    (project, ValueTree (CodeBlocksProjectExporter    ::getValueTreeTypeName (CodeBlocksProjectExporter::linuxTarget)),   CodeBlocksProjectExporter::linuxTarget); break;
+        case 13:    exp = new MinGWProjectExporter         (project, ValueTree (MinGWProjectExporter         ::getValueTreeTypeName())); break;
+        case 14:    exp = new CMakeProjectExporter         (project, ValueTree (CMakeProjectExporter         ::getValueTreeTypeName())); break;
+        case 15:    exp = new QtCreatorProjectExporter     (project, ValueTree (QtCreatorProjectExporter     ::getValueTreeTypeName())); break;
         default:    jassertfalse; return 0;
     }
 
@@ -130,9 +140,16 @@ ProjectExporter* ProjectExporter::createExporter (Project& project, const ValueT
     if (exp == nullptr)    exp = MSVCProjectExporterVC2015    ::createForSettings (project, settings);
     if (exp == nullptr)    exp = XCodeProjectExporter         ::createForSettings (project, settings);
     if (exp == nullptr)    exp = MakefileProjectExporter      ::createForSettings (project, settings);
+    if (exp == nullptr)    exp = MinGWProjectExporter		::createForSettings (project, settings);
     if (exp == nullptr)    exp = AndroidStudioProjectExporter ::createForSettings (project, settings);
     if (exp == nullptr)    exp = AndroidAntProjectExporter    ::createForSettings (project, settings);
     if (exp == nullptr)    exp = CodeBlocksProjectExporter    ::createForSettings (project, settings);
+    if (exp == nullptr)    exp = CMakeProjectExporter		::createForSettings (project, settings);
+    if (exp == nullptr)    exp = QtCreatorProjectExporter     ::createForSettings (project, settings);
+
+		if(exp == nullptr) {
+			std::cerr << "No such type: " << settings.getType().toString() << std::endl;
+		}
 
     jassert (exp != nullptr);
     return exp;
@@ -157,6 +174,7 @@ bool ProjectExporter::canProjectBeLaunched (Project* project)
            #elif JUCE_LINUX
             // (this doesn't currently launch.. not really sure what it would do on linux)
             //MakefileProjectExporter::getValueTreeTypeName(),
+            CMakeProjectExporter::getValueTreeTypeName(),
            #endif
             AndroidStudioProjectExporter::getValueTreeTypeName(),
 
@@ -505,6 +523,9 @@ static bool areCompatibleExporters (const ProjectExporter& p1, const ProjectExpo
         || (p1.isXcode() && p2.isXcode())
         || (p1.isMakefile() && p2.isMakefile())
         || (p1.isAndroid() && p2.isAndroid())
+        || (p1.isMinGWMakefile() && p2.isMinGWMakefile())
+        || (p1.isCMake() && p2.isCMake())
+        || (p1.isQtCreator() && p2.isQtCreator())
         || (p1.isCodeBlocks() && p2.isCodeBlocks() && p1.isWindows() != p2.isLinux());
 }
 
@@ -541,7 +562,7 @@ void ProjectExporter::createDefaultModulePaths()
     for (int i = project.getModules().getNumModules(); --i >= 0;)
     {
         String modID (project.getModules().getModuleID(i));
-        getPathForModuleValue (modID) = "../../juce";
+        getPathForModuleValue (modID) = "../../modules";
     }
 }
 
