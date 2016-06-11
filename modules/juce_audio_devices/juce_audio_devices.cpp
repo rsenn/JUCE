@@ -58,7 +58,7 @@
 //==============================================================================
 #elif JUCE_WINDOWS
  #if JUCE_WASAPI
-  #include <mmreg.h>
+  #include <MMReg.h>
  #endif
 
  #if JUCE_ASIO

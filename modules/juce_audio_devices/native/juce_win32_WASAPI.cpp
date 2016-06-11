@@ -94,20 +94,12 @@ bool check (HRESULT hr)
 
 //==============================================================================
 }
-/*#if JUCE_MINGW && defined(__uuidof)
-  #undef __uuidof
-#endif
-*/
-
-#include "../..//juce_core/native/juce_win32_ComSmartPtr.h"
 
 #if JUCE_MINGW
  #define JUCE_COMCLASS(name, guid) \
     struct name; \
     template<> struct UUIDGetter<name>   { static CLSID get() { return uuidFromString (guid); } }; \
     struct name
-
-//#define __uuidof(x)  UUIDGetter<x>::get()
 
  struct PROPERTYKEY
  {
