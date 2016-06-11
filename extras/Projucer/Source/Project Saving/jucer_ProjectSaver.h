@@ -392,16 +392,11 @@ private:
             if (type.isAudioPlugin() || type.isDynamicLibrary())
                 isStandaloneApplication = 0;
 
-            // Fabian TODO
-            out << "//==============================================================================" << newLine
-                << "#ifndef    JUCE_STANDALONE_APPLICATION" << newLine
-                << " #ifdef JucePlugin_Build_Standalone" << newLine
-                << "  #define  JUCE_STANDALONE_APPLICATION JucePlugin_Build_Standalone" << newLine
-                << " #else" << newLine
-                << "  #define  JUCE_STANDALONE_APPLICATION " << isStandaloneApplication << newLine
-                << " #endif" << newLine
-                << "#endif" << newLine
-                << newLine
+            out << "//==============================================================================" << newLine;
+            out << "#ifndef    JUCE_STANDALONE_APPLICATION" << newLine;
+            out << " #define   JUCE_STANDALONE_APPLICATION " << isStandaloneApplication << newLine;
+            out << "#endif" << newLine
+            out << newLine
                 << "#define JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED 1" << newLine;
         }
 
