@@ -562,7 +562,7 @@ void ProjectExporter::createDefaultModulePaths()
     for (int i = project.getModules().getNumModules(); --i >= 0;)
     {
         String modID (project.getModules().getModuleID(i));
-        getPathForModuleValue (modID) = "../../modules";
+        getPathForModuleValue (modID) = "../../juce";
     }
 }
 
