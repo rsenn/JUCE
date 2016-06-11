@@ -46,7 +46,14 @@ public:
     void paintIcon (Graphics& g, Rectangle<int> area) override
     {
         g.setColour (Colours::black);
+<<<<<<< 201e8828864c732b89ee6638e8f1b7945b82c8d4
         g.drawImage (icon, area.toFloat(), RectanglePlacement::centred);
+=======
+
+        g.drawImageWithin (icon, area.getX(), area.getY(),
+                           area.getWidth(), area.getHeight(),
+                           RectanglePlacement::centred, false);
+>>>>>>> ...
     }
 
     void deleteItem() override

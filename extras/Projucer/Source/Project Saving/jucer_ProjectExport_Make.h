@@ -231,7 +231,7 @@ private:
 
     void writeLinkerFlags (OutputStream& out, const BuildConfiguration& config) const
     {
-        out << "  LDFLAGS += $(TARGET_ARCH)" << newLine 
+        out << "  LDFLAGS += $(TARGET_ARCH)" << newLine
             << "  LIBS += -L$(BINDIR) -L$(LIBDIR)";
 
         StringArray packages = getCleanedStringArray(StringArray::fromTokens(getPackagesString(), "\r\n\t "));
@@ -331,12 +331,12 @@ private:
             targetName = getLibbedFilename (targetName);
        } else if(makefileIsDLL || projectType.isDynamicLibrary()) {
          targetName = targetName + ".so";
-         
-         if(!projectType.isAudioPlugin()) { 
+
+         if(!projectType.isAudioPlugin()) {
              if(!targetName.startsWith("lib"))
                targetName = "lib" + targetName;
          }
-           
+
     } else {
             targetName = targetName.upToLastOccurrenceOf (".", false, false) + makefileTargetSuffix;
         }
@@ -346,7 +346,7 @@ private:
         if (projectType.isStaticLibrary())
             out << "  BLDCMD = ar -rcs $(OUTDIR)/$(TARGET) $(OBJECTS)" << newLine;
         else
-            out << "  BLDCMD = $(CROSS_COMPILE)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(LIBS)" << newLine;
+            out << "  BLDCMD = $(CROSS_COMPILE)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(TARGET_ARCH) $(LIBS)" << newLine;
 
         out << "  CLEANCMD = rm -rf $(OUTDIR)/$(TARGET) $(OBJDIR)" << newLine
             << "endif" << newLine
@@ -398,11 +398,11 @@ private:
             << "    PKG_CONFIG_DIRS += $(subst :, ,$(PKG_CONFIG_PATH))" << newLine
             << "  endif" << newLine
             << newLine;
-            
-            
+
+
         out << "  PKG_CONFIG_DIRS += $(SYSROOT)/usr/lib/$(CHOST)/pkgconfig" << newLine
             << "  PKG_CONFIG_DIRS += $(SYSROOT)/usr/lib/pkgconfig" << newLine;
-           
+
         out << "  ifneq ($(PKG_CONFIG_DIRS),)" << newLine;
             if(getGNUMakeBool()) out << "    PKG_CONFIG_PATH := $(subst $(EMPTY) $(EMPTY),:,$(PKG_CONFIG_DIRS))" << newLine;
             else out << "    PKG_CONFIG_PATH := $$(set -- $(PKG_CONFIG_DIRS); IFS=\":$$IFS\"; echo \"$$*\")" << newLine;
@@ -412,7 +412,7 @@ private:
             //<< "  PKG_CONFIG_PATH := $(patsubst $(SYSROOT)%,%,$(SYSROOT)/usr/lib/$(CHOST)/pkgconfig):$(patsubst $(SYSROOT)%,%,$(SYSROOT)/usr/lib/pkgconfig)" << newLine
             << "  PKG_CONFIG_CMD += PKG_CONFIG_SYSROOT_DIR=\"$(SYSROOT)\"" << newLine
             << newLine;
-            
+
         out << "  ifneq ($(CHOST),)" << newLine
             /*<< "    LDFLAGS += -Wl,-rpath-link=$(SYSROOT)/usr/lib/$(CHOST)" << newLine
             << "    LDFLAGS += -Wl,-rpath-link=$(SYSROOT)/lib/$(CHOST)" << newLine
@@ -420,11 +420,11 @@ private:
             << "    LDFLAGS += -Wl,-rpath-link=$(SYSROOT)/lib/$(CHOST):$(SYSROOT)/usr/lib/$(CHOST)" << newLine
             << "  endif" << newLine
             << newLine;
-           
+
         out << "endif" << newLine
             << newLine;
-        
-        
+
+
         out << "ifneq ($(PKG_CONFIG_PATH),)" << newLine
             << "  PKG_CONFIG_CMD += PKG_CONFIG_PATH=\"$(PKG_CONFIG_PATH)\"" << newLine
             << "endif" << newLine
@@ -443,7 +443,7 @@ private:
 
         out << "all: $(OUTDIR)/$(TARGET)" << newLine
             << newLine;
-            
+
         out << "$(OUTDIR)/$(TARGET): $(OBJECTS) $(RESOURCES)" << newLine
             << "#\t@echo Linking " << projectName << newLine
             << "\t-@mkdir -p $(BINDIR)" << newLine

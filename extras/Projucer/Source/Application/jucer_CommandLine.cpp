@@ -629,7 +629,87 @@ namespace
             << "}" << newLine;
 
         std::cout << out.toString() << std::endl;
-        return 0;
+    }
+
+    //==============================================================================
+
+    static void addExporterToProject (const StringArray& args )
+    {
+        checkArgumentCount (args, 3);
+
+        String fileName = args[args.size()-1];
+        int added = 0;
+
+        LoadedProject proj (fileName);
+
+        for(int i = 1; i < args.size()-1; ++i) {
+          String exportName = args[i].unquoted();
+
+          if(!ProjectExporter::getExporterNames().contains(exportName))
+            throw CommandLineError ("No such exporter: " +  exportName);
+
+          if(projectHasExporter(*proj.project, exportName)) {
+            std::cerr << "Already have an exporter: " << exportName << std::endl;
+          } else {
+            std::cerr << "Adding exporter: "  << exportName << std::endl;
+            proj.project->addNewExporter(exportName);
+            ++added;
+          }
+        }
+
+        if(added > 0) {
+          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
+
+					proj.save(false);
+				}
+    }
+
+    //==============================================================================
+
+    static void getProjectExporters (const StringArray& args )
+    {
+        checkArgumentCount (args, 2);
+
+        LoadedProject proj (args[1]);
+
+        std::cerr << "Project " << proj.project->getFile().getFullPathName() << " exporters:" << std::endl;
+
+        for (Project::ExporterIterator exporter (*proj.project); exporter.next(); ) {
+					std::cout << exporter->getName() << std::endl;
+        }
+    }
+    //==============================================================================
+
+    static void removeProjectExporter (const StringArray& args )
+    {
+        checkArgumentCount (args, 3);
+
+        String fileName = args[args.size()-1];
+        int remove = 0;
+
+        LoadedProject proj (fileName);
+
+        for(int i = 1; i < args.size()-1; ++i) {
+          String exportName = args[i].unquoted();
+
+					ValueTree* settings = getProjectExporter(*proj.project, exportName);
+
+					if(settings) {
+						ValueTree parent (settings->getParent());
+						parent.removeChild (*settings, nullptr);
+						remove++;
+					} else {
+        std::cerr << "No such exporter: " << exportName  << std::endl;
+					}
+        }
+
+				if(remove) {
+					//proj.project->exporters.removeChild(exportName);
+
+          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
+
+					proj.save(false);
+				}
     }
 
     //==============================================================================
@@ -733,8 +813,7 @@ int performCommandLine (const String& commandLine)
         if (matchArgument (command, "get-exporters"))            { getProjectExporters (args); return 0; }
         if (matchArgument (command, "add-exporter"))             { addExporterToProject (args); return 0; }
         if (matchArgument (command, "remove-exporter"))         { removeProjectExporter (args); return 0; }
-
-    }
+   }
     catch (const CommandLineError& error)
     {
         std::cout << error.message << std::endl << std::endl;

@@ -56,16 +56,7 @@ namespace
 
     inline String valueToCharLiteral (const var& v)
     {
-        String fourCharCode = v.toString().trim().substring (0, 4);
-        uint32 hexRepresentation = 0;
-
-        for (int i = 0; i < 4; ++i)
-            hexRepresentation = (hexRepresentation << 8U)
-                             |  (static_cast<unsigned int> (fourCharCode[i]) & 0xffU);
-
-        return String ("0x") + String::toHexString (static_cast<int> (hexRepresentation))
-                             + String (" // ")
-                             + CppTokeniserFunctions::addEscapeChars (fourCharCode).quoted ('\'');
+        return CppTokeniserFunctions::addEscapeChars (v.toString().trim().substring (0, 4)).quoted ('\'');
     }
 }
 
