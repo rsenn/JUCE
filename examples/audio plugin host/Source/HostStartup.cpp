@@ -43,7 +43,7 @@ public:
         // initialise our settings file..
 
         PropertiesFile::Options options;
-        options.applicationName     = "Juce Audio Plugin Host";
+        options.applicationName     = "Audio Plugin Host";
         options.filenameSuffix      = "settings";
         options.osxLibrarySubFolder = "Preferences";
 
@@ -53,7 +53,13 @@ public:
         LookAndFeel::setDefaultLookAndFeel (&lookAndFeel);
 
         mainWindow = new MainHostWindow();
-        mainWindow->setUsingNativeTitleBar (true);
+        mainWindow->setUsingNativeTitleBar(
+#ifdef __ARM_EABI__ 
+            false
+#else
+            true
+#endif
+        );
 
         commandManager.registerAllCommandsForTarget (this);
         commandManager.registerAllCommandsForTarget (mainWindow);

@@ -74,7 +74,7 @@ private:
 MainHostWindow::MainHostWindow()
     : DocumentWindow (JUCEApplication::getInstance()->getApplicationName(), Colours::lightgrey,
                       DocumentWindow::allButtons)
-{
+{  
     formatManager.addDefaultFormats();
     formatManager.addFormat (new InternalPluginFormat());
 
