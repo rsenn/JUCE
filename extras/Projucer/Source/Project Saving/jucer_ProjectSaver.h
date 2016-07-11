@@ -396,7 +396,7 @@ private:
             out << "#ifndef    JUCE_STANDALONE_APPLICATION" << newLine;
             out << " #define   JUCE_STANDALONE_APPLICATION " << isStandaloneApplication << newLine;
             out << "#endif" << newLine
-            out << newLine
+                << newLine
                 << "#define JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED 1" << newLine;
         }
 
