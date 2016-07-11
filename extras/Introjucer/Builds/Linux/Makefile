@@ -1,5 +1,5 @@
-# Automatically generated makefile, created by the Introjucer
-# Don't edit this file! Your changes will be overwritten when you re-save the Introjucer project!
+# Automatically generated makefile, created by the Projucer
+# Don't edit this file! Your changes will be overwritten when you re-save the Projucer project!
 
 # (this disables dependency generation if multiple architectures are set)
 DEPFLAGS := $(if $(word 2, $(TARGET_ARCH)), , -MMD)
@@ -52,13 +52,13 @@ ifeq ($(CONFIG),Debug)
     TARGET_ARCH := 
   endif
 
-  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -D "JUCE_APP_VERSION=4.1.0" -D "JUCE_APP_VERSION_HEX=0x40100" `$(PKG_CONFIG_CMD) --cflags freetype2` -I ../../JuceLibraryCode -I ../../../../modules
+  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "DEBUG=1" -D "_DEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -D "JUCE_APP_VERSION=4.1.0" -D "JUCE_APP_VERSION_HEX=0x40100" `$(PKG_CONFIG_CMD) --cflags freetype2` -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../../../modules
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -O0 -std=gnu++0x -Wreorder -Wuninitialized -Wunused-parameter -Wstrict-aliasing -Wshadow -Wsign-compare
   CXXFLAGS += $(CFLAGS) -std=c++11
   LDFLAGS += $(TARGET_ARCH)
   LIBS += -L$(BINDIR) -L$(LIBDIR) `$(PKG_CONFIG_CMD) --libs freetype2` -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -ldl -lfreetype -lpthread -lrt -lcurl 
 
-  TARGET := Introjucer
+  TARGET := Introjucer.so
   BLDCMD = $(CROSS_COMPILE)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(LIBS)
   CLEANCMD = rm -rf $(OUTDIR)/$(TARGET) $(OBJDIR)
 endif
@@ -73,13 +73,13 @@ ifeq ($(CONFIG),Release)
     TARGET_ARCH := 
   endif
 
-  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -D "JUCE_APP_VERSION=4.1.0" -D "JUCE_APP_VERSION_HEX=0x40100" `$(PKG_CONFIG_CMD) --cflags freetype2` -I ../../JuceLibraryCode -I ../../../../modules
+  CPPFLAGS := $(DEPFLAGS) -D "LINUX=1" -D "NDEBUG=1" -D "JUCER_LINUX_MAKE_7346DA2A=1" -D "JUCE_APP_VERSION=4.1.0" -D "JUCE_APP_VERSION_HEX=0x40100" `$(PKG_CONFIG_CMD) --cflags freetype2` -I ~/SDKs/vstsdk2.4 -I ../../JuceLibraryCode -I ../../../../modules
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -O3 -std=gnu++0x -Wreorder -Wuninitialized -Wunused-parameter -Wstrict-aliasing -Wshadow -Wsign-compare
   CXXFLAGS += $(CFLAGS) -std=c++11
   LDFLAGS += $(TARGET_ARCH)
   LIBS += -L$(BINDIR) -L$(LIBDIR) `$(PKG_CONFIG_CMD) --libs freetype2` -fvisibility=hidden -L/usr/X11R6/lib/ -lX11 -lXext -lXinerama -ldl -lfreetype -lpthread -lrt -lcurl 
 
-  TARGET := Introjucer
+  TARGET := Introjucer.so
   BLDCMD = $(CROSS_COMPILE)$(CXX) $(LDFLAGS) -o $(OUTDIR)/$(TARGET) $(OBJECTS) $(RESOURCES) $(LIBS)
   CLEANCMD = rm -rf $(OUTDIR)/$(TARGET) $(OBJDIR)
 endif
@@ -132,13 +132,13 @@ OBJECTS := \
   $(OBJDIR)/jucer_NewFileWizard_fac97f47.o \
   $(OBJDIR)/jucer_NewProjectWizardClasses_891f6fa2.o \
   $(OBJDIR)/BinaryData_ce4232d4.o \
-  $(OBJDIR)/juce_core_1ee54a40.o \
-  $(OBJDIR)/juce_cryptography_3b1f489a.o \
-  $(OBJDIR)/juce_data_structures_84790dfc.o \
-  $(OBJDIR)/juce_events_584896b4.o \
-  $(OBJDIR)/juce_graphics_f9afc18.o \
-  $(OBJDIR)/juce_gui_basics_90929794.o \
-  $(OBJDIR)/juce_gui_extra_b81d9e1c.o \
+  $(OBJDIR)/juce_core_75b14332.o \
+  $(OBJDIR)/juce_cryptography_6de2ebff.o \
+  $(OBJDIR)/juce_data_structures_72d3da2c.o \
+  $(OBJDIR)/juce_events_d2be882c.o \
+  $(OBJDIR)/juce_graphics_9c18891e.o \
+  $(OBJDIR)/juce_gui_basics_8a6da59c.o \
+  $(OBJDIR)/juce_gui_extra_4a026f23.o \
 
 .PHONY: clean all
 
@@ -347,31 +347,31 @@ $(OBJDIR)/BinaryData_ce4232d4.o: ../../JuceLibraryCode/BinaryData.cpp
 	-@mkdir -p $(OBJDIR)
 	$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/juce_core_1ee54a40.o: ../../../../modules/juce_core/juce_core.cpp
+$(OBJDIR)/juce_core_75b14332.o: ../../JuceLibraryCode/juce_core.cpp
 	-@mkdir -p $(OBJDIR)
 	$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/juce_cryptography_3b1f489a.o: ../../../../modules/juce_cryptography/juce_cryptography.cpp
+$(OBJDIR)/juce_cryptography_6de2ebff.o: ../../JuceLibraryCode/juce_cryptography.cpp
 	-@mkdir -p $(OBJDIR)
 	$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/juce_data_structures_84790dfc.o: ../../../../modules/juce_data_structures/juce_data_structures.cpp
+$(OBJDIR)/juce_data_structures_72d3da2c.o: ../../JuceLibraryCode/juce_data_structures.cpp
 	-@mkdir -p $(OBJDIR)
 	$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/juce_events_584896b4.o: ../../../../modules/juce_events/juce_events.cpp
+$(OBJDIR)/juce_events_d2be882c.o: ../../JuceLibraryCode/juce_events.cpp
 	-@mkdir -p $(OBJDIR)
 	$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/juce_graphics_f9afc18.o: ../../../../modules/juce_graphics/juce_graphics.cpp
+$(OBJDIR)/juce_graphics_9c18891e.o: ../../JuceLibraryCode/juce_graphics.cpp
 	-@mkdir -p $(OBJDIR)
 	$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/juce_gui_basics_90929794.o: ../../../../modules/juce_gui_basics/juce_gui_basics.cpp
+$(OBJDIR)/juce_gui_basics_8a6da59c.o: ../../JuceLibraryCode/juce_gui_basics.cpp
 	-@mkdir -p $(OBJDIR)
 	$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
-$(OBJDIR)/juce_gui_extra_b81d9e1c.o: ../../../../modules/juce_gui_extra/juce_gui_extra.cpp
+$(OBJDIR)/juce_gui_extra_4a026f23.o: ../../JuceLibraryCode/juce_gui_extra.cpp
 	-@mkdir -p $(OBJDIR)
 	$(CROSS_COMPILE)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
