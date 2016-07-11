@@ -20,7 +20,7 @@ ifeq ($(CONFIG),Debug)
 
   CPPFLAGS := $(DEPFLAGS) -DLINUX=1 -DDEBUG=1 -D_DEBUG=1 -DJUCER_LINUX_MAKE_7346DA2A=1 -DJUCE_APP_VERSION=1.0.0 -DJUCE_APP_VERSION_HEX=0x10000 -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/VST3\ SDK -I ../../JuceLibraryCode -I ../../../../modules
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -g -ggdb -O0
-  CXXFLAGS += $(CFLAGS) -std=c++11
+  CXXFLAGS += $(CFLAGS) -std=c++14
   LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR) -L/usr/X11R6/lib/ -lGL -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
 
   TARGET := Plugin\ Host
@@ -40,7 +40,7 @@ ifeq ($(CONFIG),Release)
 
   CPPFLAGS := $(DEPFLAGS) -DLINUX=1 -DNDEBUG=1 -DJUCER_LINUX_MAKE_7346DA2A=1 -DJUCE_APP_VERSION=1.0.0 -DJUCE_APP_VERSION_HEX=0x10000 -I /usr/include -I /usr/include/freetype2 -I ~/SDKs/VST3\ SDK -I ../../JuceLibraryCode -I ../../../../modules
   CFLAGS += $(CPPFLAGS) $(TARGET_ARCH) -Os
-  CXXFLAGS += $(CFLAGS) -std=c++11
+  CXXFLAGS += $(CFLAGS) -std=c++14
   LDFLAGS += $(TARGET_ARCH) -L$(BINDIR) -L$(LIBDIR) -fvisibility=hidden -L/usr/X11R6/lib/ -lGL -lX11 -lXext -lXinerama -lasound -ldl -lfreetype -lpthread -lrt 
 
   TARGET := Plugin\ Host
@@ -72,113 +72,113 @@ OBJECTS := \
 .PHONY: clean
 
 $(OUTDIR)/$(TARGET): $(OBJECTS) $(RESOURCES)
-	@echo Linking Plugin Host
+#	@$(ECHO) Linking Plugin Host
 	-@mkdir -p $(BINDIR)
 	-@mkdir -p $(LIBDIR)
 	-@mkdir -p $(OUTDIR)
-	@$(BLDCMD)
+	$(Q)$(BLDCMD)
 
 clean:
-	@echo Cleaning Plugin Host
-	@$(CLEANCMD)
+#	@$(ECHO) Cleaning Plugin Host
+	$(Q)$(CLEANCMD)
 
 strip:
-	@echo Stripping Plugin Host
+#	@$(ECHO) Stripping Plugin Host
 	-@strip --strip-unneeded $(OUTDIR)/$(TARGET)
 
 $(OBJDIR)/FilterGraph_62e9c017.o: ../../Source/FilterGraph.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling FilterGraph.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling FilterGraph.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/GraphEditorPanel_3dbd4872.o: ../../Source/GraphEditorPanel.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling GraphEditorPanel.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling GraphEditorPanel.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/HostStartup_5ce96f96.o: ../../Source/HostStartup.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling HostStartup.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling HostStartup.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/InternalFilters_beb54bdf.o: ../../Source/InternalFilters.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling InternalFilters.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling InternalFilters.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/MainHostWindow_e920295a.o: ../../Source/MainHostWindow.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling MainHostWindow.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling MainHostWindow.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_audio_basics_6b797ca1.o: ../../JuceLibraryCode/juce_audio_basics.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_audio_basics.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_audio_basics.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_audio_devices_a742c38b.o: ../../JuceLibraryCode/juce_audio_devices.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_audio_devices.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_audio_devices.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_audio_formats_5a29c68a.o: ../../JuceLibraryCode/juce_audio_formats.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_audio_formats.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_audio_formats.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_audio_processors_dea3173d.o: ../../JuceLibraryCode/juce_audio_processors.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_audio_processors.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_audio_processors.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_audio_utils_c7eb679f.o: ../../JuceLibraryCode/juce_audio_utils.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_audio_utils.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_audio_utils.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_core_75b14332.o: ../../JuceLibraryCode/juce_core.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_core.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_core.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_cryptography_6de2ebff.o: ../../JuceLibraryCode/juce_cryptography.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_cryptography.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_cryptography.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_data_structures_72d3da2c.o: ../../JuceLibraryCode/juce_data_structures.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_data_structures.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_data_structures.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_events_d2be882c.o: ../../JuceLibraryCode/juce_events.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_events.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_events.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_graphics_9c18891e.o: ../../JuceLibraryCode/juce_graphics.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_graphics.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_graphics.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_gui_basics_8a6da59c.o: ../../JuceLibraryCode/juce_gui_basics.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_gui_basics.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_gui_basics.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_gui_extra_4a026f23.o: ../../JuceLibraryCode/juce_gui_extra.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_gui_extra.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_gui_extra.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_opengl_cd70b4c2.o: ../../JuceLibraryCode/juce_opengl.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_opengl.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_opengl.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 $(OBJDIR)/juce_video_f128c512.o: ../../JuceLibraryCode/juce_video.cpp
 	-@mkdir -p $(OBJDIR)
-	@echo "Compiling juce_video.cpp"
-	@$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+#	@$(ECHO) "Compiling juce_video.cpp"
+	$(Q)$(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 
 -include $(OBJECTS:%.o=%.d)

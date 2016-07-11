@@ -66,6 +66,7 @@ public:
     virtual void create (const OwnedArray<LibraryModule>&) const = 0; // may throw a SaveError
     virtual bool shouldFileBeCompiledByDefault (const RelativePath& path) const;
     virtual bool canCopeWithDuplicateFiles() = 0;
+<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Source/Project Saving/jucer_ProjectExporter.h
     virtual bool supportsUserDefinedConfigurations() const = 0; // false if exporter only supports two configs Debug and Release
     virtual void updateDeprecatedProjectSettingsInteractively();
 
@@ -92,6 +93,23 @@ public:
     virtual bool supportsAU()   const  = 0;
     virtual bool supportsAUv3() const  = 0;
     virtual bool supportsStandalone() const  = 0; // as in Standalong plug-in type, not GUIApp or ConsoleApp
+=======
+    virtual bool supportsUserDefinedConfigurations() const   { return true; }
+
+    virtual bool isXcode() const                { return false; }
+    virtual bool isVisualStudio() const         { return false; }
+    virtual int getVisualStudioVersion() const  { return 0; }
+    virtual bool isCodeBlocksWindows() const    { return false; }
+    virtual bool isCodeBlocksLinux() const      { return false; }
+    virtual bool isLinuxMakefile() const        { return false; }
+    virtual bool isMakefile() const             { return false; }
+    virtual bool isMinGW32Makefile() const      { return false; }
+
+    virtual bool isAndroid() const              { return false; }
+    virtual bool isWindows() const              { return false; }
+    virtual bool isLinux() const                { return false; }
+    virtual bool isOSX() const                  { return false; }
+>>>>>>> enki fixes:extras/Introjucer/Source/Project Saving/jucer_ProjectExporter.h
 
     //==============================================================================
     bool mayCompileOnCurrentOS() const
