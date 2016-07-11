@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="IilE7R" name="MPETest" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.yourcompany.MPETest" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.1">
+              jucerVersion="4.2.3">
   <MAINGROUP id="VCQQcn" name="MPETest">
     <GROUP id="{D43238F0-992F-BC5A-F1AA-31BBBD3D17B0}" name="Source">
       <FILE id="uRxR7V" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
@@ -43,7 +43,7 @@
         <MODULEPATH id="juce_audio_utils" path="../../modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
-    <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
+    <LINUX_MAKE targetFolder="Builds/LinuxMakefile" packages="freetype2">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/" isDebug="1" optimisation="1"
                        targetName="MPETest"/>

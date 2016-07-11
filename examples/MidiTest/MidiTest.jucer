@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="wHE0ay" name="MidiTest" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.yourcompany.MidiTest" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.1">
+              jucerVersion="4.2.3">
   <MAINGROUP id="s3xxCh" name="MidiTest">
     <GROUP id="{7D29F5BC-1B05-AE8F-9202-5CF152AB1103}" name="Source">
       <FILE id="kpmJ3T" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
@@ -34,7 +34,7 @@
         <MODULEPATH id="juce_audio_basics" path="../../modules"/>
       </MODULEPATHS>
     </VS2015>
-    <LINUX_MAKE targetFolder="Builds/LinuxMakefile" extraCompilerFlags="">
+    <LINUX_MAKE targetFolder="Builds/LinuxMakefile" extraCompilerFlags="" packages="freetype2">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/" isDebug="1" optimisation="1"
                        targetName="MidiTest"/>
@@ -102,7 +102,11 @@
     <ANDROIDSTUDIO androidActivityClass="com.yourcompany.miditest.MidiTest" androidInternetNeeded="0"
                    androidBluetoothNeeded="1" androidCpp11="1" androidScreenOrientation="unspecified"
                    targetFolder="Builds/AndroidStudio" androidSDKPath="" androidNDKPath=""
-                   androidMicNeeded="1" gradleToolchain="clang" gradleToolchainVersion="3.6">
+                   androidMicNeeded="1" gradleToolchain="clang" gradleToolchainVersion="3.6"
+                   androidVersionCode="1" androidMinimumSDK="23" androidKeyStore="${user.home}/.android/debug.keystore"
+                   androidKeyStorePass="android" androidKeyAlias="androiddebugkey"
+                   androidKeyAliasPass="android" gradleVersion="2.10" gradleWrapperVersion="0.6.0-beta5"
+                   buildToolsVersion="23.0.1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" androidArchitectures="armeabi armeabi-v7a x86" isDebug="1"
                        optimisation="1" targetName="MidiTest"/>

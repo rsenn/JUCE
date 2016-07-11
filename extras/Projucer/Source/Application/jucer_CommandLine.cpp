@@ -26,6 +26,7 @@
 #include "../Project/jucer_Project.h"
 #include "../Project/jucer_Module.h"
 #include "jucer_CommandLine.h"
+#include "../Project Saving/jucer_ProjectExporter.h"
 
 
 //==============================================================================
@@ -117,6 +118,30 @@ namespace
             throw CommandLineError ("!!! ERROR Couldn't write to file!");
     }
 
+    static bool projectHasExporter(Project& p, const String& name) {
+      for(Project::ExporterIterator exporter (p); exporter.next(); ) {
+        if(exporter->getName() == name) {
+          return true;
+        }
+      }
+      return false;
+    }
+      
+    //==============================================================================
+
+    static int listExporterNames ()
+    {
+      
+      std::cerr << "Exporter names:" << std::endl;
+      
+      std::cout
+         <<  ProjectExporter::getExporterNames().joinIntoString("\n")
+         << std::endl;
+   
+         
+      return 0;
+    }
+ 
     //==============================================================================
     struct LoadedProject
     {
@@ -525,6 +550,7 @@ namespace
     }
 
     //==============================================================================
+<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Source/Application/jucer_CommandLine.cpp
     static String getStringConcatenationExpression (Random& rng, int start, int length)
     {
         jassert (length > 0);
@@ -595,6 +621,55 @@ namespace
             << "}" << newLine;
 
         std::cout << out.toString() << std::endl;
+=======
+
+    static void addExporterToProject (const StringArray& args )
+    {
+        checkArgumentCount (args, 3);
+
+        String fileName = args[args.size()-1];
+        int added = 0;
+
+        LoadedProject proj (fileName);
+           
+        for(int i = 1; i < args.size()-1; ++i) {
+          String exportName = args[i].unquoted();
+                      
+          if(!ProjectExporter::getExporterNames().contains(exportName))
+            throw CommandLineError ("No such exporter: " +  exportName);
+          
+          if(projectHasExporter(*proj.project, exportName)) {
+            std::cerr << "Already have an exporter: " << exportName << std::endl;
+          } else {        
+            std::cerr << "Adding exporter: "  << exportName << std::endl;             
+            proj.project->addNewExporter(exportName);          
+            ++added;
+          }
+        }
+
+        if(added > 0) {
+          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
+          
+					proj.save(false);
+				}
+    }
+
+    //==============================================================================
+
+    static int getProjectExporters (const StringArray& args )
+    {
+        checkArgumentCount (args, 2);
+
+        LoadedProject proj (args[1]);
+
+        std::cerr << "Project " << proj.project->getFile().getFullPathName() << " exporters:" << std::endl;
+
+        for (Project::ExporterIterator exporter (*proj.project); exporter.next(); ) {
+			std::cout << exporter->getName() << std::endl;
+        }
+        
+        return 0;
+>>>>>>> enki fixes:extras/Introjucer/Source/Application/jucer_CommandLine.cpp
     }
 
     //==============================================================================
@@ -614,8 +689,21 @@ namespace
                   << " " << appName << " --resave-resources project_file" << std::endl
                   << "    Resaves just the binary resources for a project." << std::endl
                   << std::endl
+<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Source/Application/jucer_CommandLine.cpp
                   << " " << appName << " --get-version project_file" << std::endl
                   << "    Returns the version number of a project." << std::endl
+=======
+                  << " " << appName << " --list-exporter-names" << std::endl
+                  << "    Gets all available exporter types." << std::endl
+                  << std::endl
+                  << " " << appName << " --get-exporters project_file" << std::endl
+                  << "    Gets exporters of the specified project." << std::endl
+                  << std::endl
+                  << " " << appName << " --add-exporter name project_file" << std::endl
+                  << "    Adds an exporter and resaves." << std::endl
+                  << std::endl
+                  << " " << appName << " --resave-resources project_file" << std::endl
+>>>>>>> enki fixes:extras/Introjucer/Source/Application/jucer_CommandLine.cpp
                   << std::endl
                   << " " << appName << " --set-version version_number project_file" << std::endl
                   << "    Updates the version number in a project." << std::endl
@@ -679,7 +767,14 @@ int performCommandLine (const String& commandLine)
         if (matchArgument (command, "remove-tabs"))              { cleanWhitespace (args, true); return 0; }
         if (matchArgument (command, "tidy-divider-comments"))    { tidyDividerComments (args); return 0; }
         if (matchArgument (command, "fix-broken-include-paths")) { fixRelativeIncludePaths (args); return 0; }
+<<<<<<< 572868f5f2b4903d28a119402150dbc451c62113:extras/Projucer/Source/Application/jucer_CommandLine.cpp
         if (matchArgument (command, "obfuscated-string-code"))   { generateObfuscatedStringCode (args); return 0; }
+=======
+				if (matchArgument (command, "list-exporter-names"))      { listExporterNames (); return 0; }
+				if (matchArgument (command, "get-exporters"))            { getProjectExporters (args); return 0; }
+				if (matchArgument (command, "add-exporter"))             { addExporterToProject (args); return 0; }
+
+>>>>>>> enki fixes:extras/Introjucer/Source/Application/jucer_CommandLine.cpp
     }
     catch (const CommandLineError& error)
     {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="sBBIzr" name="JuceDemo" projectType="guiapp" version="3.0.0"
-              bundleIdentifier="com.yourcompany.JuceDemo" jucerVersion="4.3.1"
+              bundleIdentifier="com.yourcompany.JuceDemo" jucerVersion="4.2.3"
               defines="JUCE_UNIT_TESTS=1" includeBinaryInAppConfig="1">
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" vstFolder="~/SDKs/vstsdk2.4" rtasFolder="~/SDKs/PT_80_SDK"
@@ -168,7 +168,10 @@
              androidSDKPath="" androidNDKPath="" androidInternetNeeded="1"
              androidMicNeeded="1" bigIcon="xycKOk" androidCpp11="1" smallIcon="BvyE0d"
              androidBluetoothNeeded="0" androidTheme="@android:style/Theme.NoTitleBar"
-             androidScreenOrientation="unspecified">
+             androidScreenOrientation="unspecified" androidVersionCode="1"
+             androidMinimumSDK="23" androidKeyStore="${user.home}/.android/debug.keystore"
+             androidKeyStorePass="android" androidKeyAlias="androiddebugkey"
+             androidKeyAliasPass="android">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" androidArchitectures="armeabi x86" isDebug="1" optimisation="1"
                        targetName="JuceDemo"/>
@@ -197,7 +200,11 @@
                    androidCpp11="1" targetFolder="Builds/AndroidStudio" androidSDKPath=""
                    androidNDKPath="" androidBluetoothNeeded="1" bigIcon="BvyE0d"
                    androidScreenOrientation="unspecified" androidMicNeeded="1" gradleToolchain="clang"
-                   gradleToolchainVersion="3.6" androidTheme="@android:style/Theme.NoTitleBar">
+                   gradleToolchainVersion="3.6" androidTheme="@android:style/Theme.NoTitleBar"
+                   androidVersionCode="1" androidMinimumSDK="23" androidKeyStore="${user.home}/.android/debug.keystore"
+                   androidKeyStorePass="android" androidKeyAlias="androiddebugkey"
+                   androidKeyAliasPass="android" gradleVersion="2.10" gradleWrapperVersion="0.6.0-beta5"
+                   buildToolsVersion="23.0.1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" androidArchitectures="armeabi x86" isDebug="1" optimisation="1"
                        targetName="JuceDemo"/>
@@ -222,7 +229,7 @@
         <MODULEPATH id="juce_audio_basics" path="../../modules"/>
       </MODULEPATHS>
     </ANDROIDSTUDIO>
-    <LINUX_MAKE targetFolder="Builds/Linux">
+    <LINUX_MAKE targetFolder="Builds/Linux" packages="freetype2">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/" isDebug="1" optimisation="1"
                        targetName="JuceDemo"/>

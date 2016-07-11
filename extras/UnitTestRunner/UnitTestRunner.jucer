@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="Z2Xzcp" name="UnitTestRunner" projectType="consoleapp" version="1.0.0"
               bundleIdentifier="com.yourcompany.UnitTestRunner" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.1" defines="JUCE_UNIT_TESTS=1">
+              jucerVersion="4.2.3" defines="JUCE_UNIT_TESTS=1">
   <MAINGROUP id="GZdWCU" name="UnitTestRunner">
     <GROUP id="{22894462-E1A9-036F-ED94-B51A50C87552}" name="Source">
       <FILE id="ynaYaM" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
@@ -33,7 +33,7 @@
         <MODULEPATH id="juce_osc" path="../../modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
-    <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
+    <LINUX_MAKE targetFolder="Builds/LinuxMakefile" packages="freetype2">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/" isDebug="1" optimisation="1"
                        targetName="UnitTestRunner"/>

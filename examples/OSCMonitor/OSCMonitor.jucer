@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="IhmIkj" name="OSCMonitor" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.rawmaterialsoftware.OSCMonitor" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.1">
+              jucerVersion="4.2.3">
   <MAINGROUP id="N9NMMk" name="OSCMonitor">
     <GROUP id="{2B92546C-6B49-72D9-ACD0-0F2FCE9AD0D5}" name="Source">
       <FILE id="fqVB21" name="OSCLogListBox.h" compile="0" resource="0" file="Source/OSCLogListBox.h"/>
@@ -35,7 +35,7 @@
         <MODULEPATH id="juce_osc" path="../../modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
-    <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
+    <LINUX_MAKE targetFolder="Builds/LinuxMakefile" packages="freetype2">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/" isDebug="1" optimisation="1"
                        targetName="OSCMonitor"/>

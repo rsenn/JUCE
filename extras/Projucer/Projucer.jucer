@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="M70qfTRRk" name="Projucer" projectType="guiapp" juceFolder="../../juce"
-              jucerVersion="4.3.1" version="4.3.1" bundleIdentifier="com.juce.theprojucer"
+              jucerVersion="4.2.3" version="4.3.1" bundleIdentifier="com.juce.theprojucer"
               defines="" includeBinaryInAppConfig="1">
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" vstFolder="~/SDKs/vstsdk2.4" rtasFolder="~/SDKs/PT_80_SDK"
@@ -68,7 +68,8 @@
       </MODULEPATHS>
     </VS2015>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile" extraCompilerFlags="-std=c++11"
-                extraLinkerFlags="" bigIcon="OCyr5F" smallIcon="" vstFolder="">
+                extraLinkerFlags="" bigIcon="OCyr5F" smallIcon="" vstFolder=""
+                packages="freetype2">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" libraryPath="" isDebug="1" optimisation="1" targetName="Projucer"
                        headerPath=""/>

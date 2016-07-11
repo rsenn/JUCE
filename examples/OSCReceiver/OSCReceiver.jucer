@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="pdocPt" name="OSCReceiver" projectType="guiapp" version="1.0.0"
               bundleIdentifier="com.yourcompany.OSCReceiver" includeBinaryInAppConfig="1"
-              jucerVersion="4.3.1">
+              jucerVersion="4.2.3">
   <MAINGROUP id="Y6Q0O9" name="OSCReceiver">
     <GROUP id="{9F303ECD-83DE-CA91-97B4-C083DA897F49}" name="Source">
       <FILE id="HHuoMc" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
@@ -28,7 +28,7 @@
         <MODULEPATH id="juce_osc" path="../../modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
-    <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
+    <LINUX_MAKE targetFolder="Builds/LinuxMakefile" packages="freetype2">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/" isDebug="1" optimisation="1"
                        targetName="OSCReceiver"/>
@@ -86,7 +86,10 @@
                    androidInternetNeeded="1" androidBluetoothNeeded="1" androidCpp11="1"
                    targetFolder="Builds/AndroidStudio" androidScreenOrientation="unspecified"
                    gradleToolchain="clang" gradleToolchainVersion="3.6" androidSDKPath=""
-                   androidNDKPath="">
+                   androidNDKPath="" androidVersionCode="1" androidMinimumSDK="23"
+                   androidKeyStore="${user.home}/.android/debug.keystore" androidKeyStorePass="android"
+                   androidKeyAlias="androiddebugkey" androidKeyAliasPass="android"
+                   gradleVersion="2.10" gradleWrapperVersion="0.6.0-beta5" buildToolsVersion="23.0.1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" androidArchitectures="armeabi armeabi-v7a x86" isDebug="1"
                        optimisation="1" targetName="OSCReceiver"/>
