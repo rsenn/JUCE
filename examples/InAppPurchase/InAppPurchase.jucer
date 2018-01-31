@@ -41,7 +41,7 @@
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_IPHONE targetFolder="Builds/iOS" iosScreenOrientation="portraitlandscape"
-                  enableGNUExtensions="0" extraDefs="" iosInAppPurchases="1" extraCompilerFlags="-pedantic -Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion -Wextra-semi"
+                  enableGNUExtensions="0" extraDefs="" iosInAppPurchases="1" extraCompilerFlags="-pedantic -Wextra-semi"
                   bigIcon="OqeN3h" smallIcon="OqeN3h" iPadScreenOrientation="portraitlandscape"
                   iosDeviceFamily="1,2">
       <CONFIGURATIONS>
@@ -67,11 +67,10 @@
     </XCODE_IPHONE>
     <ANDROIDSTUDIO targetFolder="Builds/Android" androidSDKPath="" androidNDKPath=""
                    extraDefs="" androidInternetNeeded="1" androidInAppBilling="1"
-                   extraCompilerFlags="-pedantic -Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion -Wextra-semi"
-                   androidKeyStore="../../../Signing/InAppPurchase.keystore" androidKeyStorePass="amazingvoices"
-                   androidKeyAlias="InAppPurchase" androidKeyAliasPass="amazingvoices"
-                   smallIcon="OqeN3h" bigIcon="OqeN3h" androidScreenOrientation="unspecified"
-                   androidVersionCode="3">
+                   extraCompilerFlags="-pedantic -Wextra-semi" androidKeyStore="../../../Signing/InAppPurchase.keystore"
+                   androidKeyStorePass="amazingvoices" androidKeyAlias="InAppPurchase"
+                   androidKeyAliasPass="amazingvoices" smallIcon="OqeN3h" bigIcon="OqeN3h"
+                   androidScreenOrientation="unspecified" androidVersionCode="3">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" androidArchitectures="armeabi x86" isDebug="1" optimisation="1"
                        targetName="InAppPurchase"/>

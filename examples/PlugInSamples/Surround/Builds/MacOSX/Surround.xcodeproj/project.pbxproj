@@ -231,7 +231,7 @@
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				OTHER_LDFLAGS = "-bundle -lSurround";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
 				SDKROOT_ppc = macosx10.5;
@@ -271,7 +271,7 @@
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				OTHER_LDFLAGS = "-bundle -lSurround";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
 				SDKROOT_ppc = macosx10.5;
@@ -310,7 +310,7 @@
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				OTHER_LDFLAGS = "-bundle -lSurround";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
 				SDKROOT_ppc = macosx10.5;
@@ -350,7 +350,7 @@
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				OTHER_LDFLAGS = "-bundle -lSurround";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
 				SDKROOT_ppc = macosx10.5;
@@ -390,7 +390,7 @@
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				OTHER_LDFLAGS = "-bundle -lAAXLibrary_libcpp -lSurround";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
 				SDKROOT_ppc = macosx10.5;
@@ -431,7 +431,7 @@
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				OTHER_LDFLAGS = "-bundle -lAAXLibrary_libcpp -lSurround";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
 				SDKROOT_ppc = macosx10.5;
@@ -470,7 +470,7 @@
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				OTHER_LDFLAGS = "-bundle -lSurround";
 				OTHER_REZFLAGS = "-d ppc_$ppc -d i386_$i386 -d ppc64_$ppc64 -d x86_64_$x86_64 -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I \"$(DEVELOPER_DIR)/Extras/CoreAudio/AudioUnits/AUPublic/AUBase\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
@@ -511,7 +511,7 @@
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				OTHER_LDFLAGS = "-bundle -lSurround";
 				OTHER_REZFLAGS = "-d ppc_$ppc -d i386_$i386 -d ppc64_$ppc64 -d x86_64_$x86_64 -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I \"$(DEVELOPER_DIR)/Extras/CoreAudio/AudioUnits/AUPublic/AUBase\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
@@ -546,7 +546,7 @@
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
 				SDKROOT_ppc = macosx10.5;
 				USE_HEADERMAP = NO; }; name = Debug; };
@@ -579,7 +579,7 @@
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wstrict-aliasing -Wconversion -Wsign-compare -Woverloaded-virtual -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-Wextra-semi";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.Surround;
 				SDKROOT_ppc = macosx10.5;
 				USE_HEADERMAP = NO; }; name = Release; };

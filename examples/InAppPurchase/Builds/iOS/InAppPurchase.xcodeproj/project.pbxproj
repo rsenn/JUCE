@@ -239,7 +239,7 @@
 				INFOPLIST_FILE = Info-App.plist;
 				INFOPLIST_PREPROCESS = NO;
 				INSTALL_PATH = "$(HOME)/Applications";
-				OTHER_CPLUSPLUSFLAGS = "-pedantic -Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-pedantic -Wextra-semi";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.juceInAppPurchaseSample;
 				USE_HEADERMAP = NO; }; name = Debug; };
 		6CE1C17A2BFC39735C8B8537 = {isa = XCBuildConfiguration; buildSettings = {
@@ -272,7 +272,7 @@
 				INFOPLIST_FILE = Info-App.plist;
 				INFOPLIST_PREPROCESS = NO;
 				INSTALL_PATH = "$(HOME)/Applications";
-				OTHER_CPLUSPLUSFLAGS = "-pedantic -Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion -Wextra-semi";
+				OTHER_CPLUSPLUSFLAGS = "-pedantic -Wextra-semi";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.juceInAppPurchaseSample;
 				USE_HEADERMAP = NO; }; name = Release; };
 		E458961FBB0DE8F9BE66FB25 = {isa = XCBuildConfiguration; buildSettings = {

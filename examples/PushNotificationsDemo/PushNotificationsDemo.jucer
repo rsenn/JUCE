@@ -55,7 +55,7 @@
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_IPHONE targetFolder="Builds/iOS" iosScreenOrientation="portraitlandscape"
-                  iosPushNotifications="1" extraCompilerFlags="-pedantic -Werror -Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion&#10;-F../../../../3rd_party/FacebookSDKs-iOS-4&#10;-F../../../../3rd_party/Firebase_ios_sdk/Analytics&#10;-F../../../../3rd_party/Firebase_ios_sdk/Messaging"
+                  iosPushNotifications="1" extraCompilerFlags="-pedantic -Wsign-conversion&#10;-F../../../../3rd_party/FacebookSDKs-iOS-4&#10;-F../../../../3rd_party/Firebase_ios_sdk/Analytics&#10;-F../../../../3rd_party/Firebase_ios_sdk/Messaging"
                   customXcodeResourceFolders="./BinaryResources/sounds" iPadScreenOrientation="portraitlandscape"
                   iosDeviceFamily="1,2">
       <CONFIGURATIONS>
@@ -81,7 +81,7 @@
     </XCODE_IPHONE>
     <ANDROIDSTUDIO targetFolder="Builds/Android" androidSDKPath="" androidNDKPath=""
                    androidEnableRemoteNotifications="1" androidRemoteNotificationsConfigFile="../google-services.json"
-                   extraCompilerFlags="-pedantic -Werror -Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion&#10;-F../../../../3rd_party/FacebookSDKs-iOS-4&#10;-F../../../../3rd_party/Firebase_ios_sdk/Analytics&#10;-F../../../../3rd_party/Firebase_ios_sdk/Messaging"
+                   extraCompilerFlags="-pedantic -Wsign-conversion&#10;-F../../../../3rd_party/FacebookSDKs-iOS-4&#10;-F../../../../3rd_party/Firebase_ios_sdk/Analytics&#10;-F../../../../3rd_party/Firebase_ios_sdk/Messaging"
                    androidVibratePermissionNeeded="1" androidMinimumSDK="26">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" androidArchitectures="armeabi x86" isDebug="1" optimisation="1"

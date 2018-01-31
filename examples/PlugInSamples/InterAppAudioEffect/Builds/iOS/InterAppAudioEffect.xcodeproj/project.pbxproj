@@ -174,7 +174,7 @@
 					"JucePlugin_Build_Standalone=0", );
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = ("../../JuceLibraryCode", "../../../../../modules", "../../../../../modules/juce_audio_plugin_client", "$(inherited)");
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion";
+				OTHER_CPLUSPLUSFLAGS = "-Wsign-conversion";
 				OTHER_LDFLAGS = "-lInterAppAudioEffect";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.InterAppAudioEffect;
 				USE_HEADERMAP = NO; }; name = Debug; };
@@ -204,7 +204,7 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = ("../../JuceLibraryCode", "../../../../../modules", "../../../../../modules/juce_audio_plugin_client", "$(inherited)");
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion";
+				OTHER_CPLUSPLUSFLAGS = "-Wsign-conversion";
 				OTHER_LDFLAGS = "-lInterAppAudioEffect";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.InterAppAudioEffect;
 				USE_HEADERMAP = NO; }; name = Release; };
@@ -236,7 +236,7 @@
 				HEADER_SEARCH_PATHS = ("../../JuceLibraryCode", "../../../../../modules", "../../../../../modules/juce_audio_plugin_client", "$(inherited)");
 				INFOPLIST_FILE = Info-Standalone_Plugin.plist;
 				INFOPLIST_PREPROCESS = NO;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion";
+				OTHER_CPLUSPLUSFLAGS = "-Wsign-conversion";
 				OTHER_LDFLAGS = "-lInterAppAudioEffect";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.InterAppAudioEffect;
 				USE_HEADERMAP = NO; }; name = Debug; };
@@ -269,7 +269,7 @@
 				HEADER_SEARCH_PATHS = ("../../JuceLibraryCode", "../../../../../modules", "../../../../../modules/juce_audio_plugin_client", "$(inherited)");
 				INFOPLIST_FILE = Info-Standalone_Plugin.plist;
 				INFOPLIST_PREPROCESS = NO;
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion";
+				OTHER_CPLUSPLUSFLAGS = "-Wsign-conversion";
 				OTHER_LDFLAGS = "-lInterAppAudioEffect";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.InterAppAudioEffect;
 				USE_HEADERMAP = NO; }; name = Release; };
@@ -300,7 +300,7 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = ("../../JuceLibraryCode", "../../../../../modules", "../../../../../modules/juce_audio_plugin_client", "$(inherited)");
 				INSTALL_PATH = "@executable_path/Frameworks";
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion";
+				OTHER_CPLUSPLUSFLAGS = "-Wsign-conversion";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.InterAppAudioEffect;
 				USE_HEADERMAP = NO; }; name = Debug; };
 		665044AFDC3F0D4E11643857 = {isa = XCBuildConfiguration; buildSettings = {
@@ -331,7 +331,7 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = ("../../JuceLibraryCode", "../../../../../modules", "../../../../../modules/juce_audio_plugin_client", "$(inherited)");
 				INSTALL_PATH = "@executable_path/Frameworks";
-				OTHER_CPLUSPLUSFLAGS = "-Wall -Wshadow -Wno-missing-field-initializers -Wshadow -Wshorten-64-to-32 -Wstrict-aliasing -Wuninitialized -Wunused-parameter -Wconversion -Wsign-compare -Wint-conversion -Woverloaded-virtual -Wreorder -Wconstant-conversion -Wsign-conversion";
+				OTHER_CPLUSPLUSFLAGS = "-Wsign-conversion";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roli.InterAppAudioEffect;
 				USE_HEADERMAP = NO; }; name = Release; };
 		4650CE5DEC4B4B8ED96435A4 = {isa = XCBuildConfiguration; buildSettings = {
