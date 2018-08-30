@@ -91,8 +91,7 @@ namespace
         Array<File> files;
 
         for (DirectoryIterator di (folder, true, "*.cpp;*.cxx;*.cc;*.c;*.h;*.hpp;*.hxx;*.hpp;*.mm;*.m", File::findFiles); di.next();)
-            if (! di.getFile().isSymbolicLink())
-                files.add (di.getFile());
+            files.add (di.getFile());
 
         return files;
     }
@@ -151,96 +150,6 @@ namespace
       return 0;
     }
 
-/*
-    static void scanFoldersForTranslationFiles (const StringArray& args)
-    {
-        checkArgumentCount (args, 2);
-
-        StringArray translations;
-
-        for (auto it = args.begin() + 1; it != args.end(); ++it)
-        {
-            const File directoryToSearch (getDirectoryCheckingForExistence (*it));
-            TranslationHelpers::scanFolderForTranslations (translations, directoryToSearch);
-        }
-
-        std::cout << TranslationHelpers::mungeStrings (translations) << std::endl;
-    }
-
-    static void createFinishedTranslationFile (const StringArray& args)
-    {
-        checkArgumentCount (args, 3);
-
-        auto preTranslated  = getFileCheckingForExistence (args[1]).loadFileAsString();
-        auto postTranslated = getFileCheckingForExistence (args[2]).loadFileAsString();
-
-        auto localisedContent = (args.size() > 3 ? getFileCheckingForExistence (args[3]).loadFileAsString() : String());
-        auto localised        = LocalisedStrings (localisedContent, false);
-
-        using TH = TranslationHelpers;
-        std::cout << TH::createFinishedTranslationFile (TH::withTrimmedEnds (TH::breakApart (preTranslated)),
-                                                        TH::withTrimmedEnds (TH::breakApart (postTranslated)),
-                                                        localised) << std::endl;
-    }
-*/
-    //==============================================================================
-    static void encodeBinary (const StringArray& args)
-    {
-        checkArgumentCount (args, 3);
-        const File source (getFileCheckingForExistence (args[1]));
-        const File target (getFile (args[2]));
-
-        MemoryOutputStream literal;
-        size_t dataSize = 0;
-
-        {
-            MemoryBlock data;
-            FileInputStream input (source);
-            input.readIntoMemoryBlock (data);
-            CodeHelpers::writeDataAsCppLiteral (data, literal, true, true);
-            dataSize = data.getSize();
-        }
-
-        auto variableName = CodeHelpers::makeBinaryDataIdentifierName (source);
-
-        MemoryOutputStream header, cpp;
-
-        header << "// Auto-generated binary data by the Projucer" << newLine
-               << "// Source file: " << source.getRelativePathFrom (target.getParentDirectory()) << newLine
-               << newLine;
-
-        cpp << header.toString();
-
-        if (target.hasFileExtension (headerFileExtensions))
-        {
-            header << "static constexpr unsigned char " << variableName << "[] =" << newLine
-                   << literal.toString() << newLine
-                   << newLine;
-
-            replaceFile (target, header.toString(), "Writing: ");
-        }
-        else if (target.hasFileExtension (cppFileExtensions))
-        {
-            header << "extern const char*  " << variableName << ";" << newLine
-                   << "const unsigned int  " << variableName << "Size = " << (int) dataSize << ";" << newLine
-                   << newLine;
-
-            cpp << CodeHelpers::createIncludeStatement (target.withFileExtension (".h").getFileName()) << newLine
-                << newLine
-                << "static constexpr unsigned char " << variableName << "_local[] =" << newLine
-                << literal.toString() << newLine
-                << newLine
-                << "const char* " << variableName << " = (const char*) " << variableName << "_local;" << newLine;
-
-            replaceFile (target, cpp.toString(), "Writing: ");
-            replaceFile (target.withFileExtension (".h"), header.toString(), "Writing: ");
-        }
-        else
-        {
-            throw CommandLineError ("You need to specify a .h or .cpp file as the target");
-        }
-    }
-
     //==============================================================================
     struct LoadedProject
     {
@@ -280,88 +189,7 @@ namespace
     };
 
     //==============================================================================
-
-    static void addExporterToProject (const StringArray& args )
-    {
-        checkArgumentCount (args, 3);
-
-        String fileName = args[args.size()-1];
-        int added = 0;
-
-        LoadedProject proj (fileName);
-
-        for(int i = 1; i < args.size()-1; ++i) {
-          String exportName = args[i].unquoted();
-
-          if(!ProjectExporter::getExporterNames().contains(exportName))
-            throw CommandLineError ("No such exporter: " +  exportName);
-
-          if(projectHasExporter(*proj.project, exportName)) {
-            std::cerr << "Already have an exporter: " << exportName << std::endl;
-          } else {
-            std::cerr << "Adding exporter: "  << exportName << std::endl;
-            proj.project->addNewExporter(exportName);
-            ++added;
-          }
-        }
-
-        if(added > 0) {
-          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
-
-					proj.save(false);
-				}
-    }
-
-    //==============================================================================
-
-    static void getProjectExporters (const StringArray& args )
-    {
-        checkArgumentCount (args, 2);
-
-        LoadedProject proj (args[1]);
-
-        std::cerr << "Project " << proj.project->getFile().getFullPathName() << " exporters:" << std::endl;
-
-        for (Project::ExporterIterator exporter (*proj.project); exporter.next(); ) {
-					std::cout << exporter->getName() << std::endl;
-        }
-    }
-    //==============================================================================
-
-    static void removeProjectExporter (const StringArray& args )
-    {
-        checkArgumentCount (args, 3);
-
-        String fileName = args[args.size()-1];
-        int remove = 0;
-
-        LoadedProject proj (fileName);
-
-        for(int i = 1; i < args.size()-1; ++i) {
-          String exportName = args[i].unquoted();
-
-					ValueTree* settings = getProjectExporter(*proj.project, exportName);
-
-					if(settings) {
-						ValueTree parent (settings->getParent());
-						parent.removeChild (*settings, nullptr);
-						remove++;
-					} else {
-        std::cerr << "No such exporter: " << exportName  << std::endl;
-					}
-        }
-
-				if(remove) {
-					//proj.project->exporters.removeChild(exportName);
-
-          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
-
-					proj.save(false);
-                                }
-    }
-
-    //==============================================================================
-    /* Running a command-line of the form "projucer --resave foobar.jucer" will try to load
+    /* Running a command-line of the form "introjucer --resave foobar.jucer" will try to load
        that project and re-export all of its targets.
     */
     static void resaveProject (const StringArray& args, bool justSaveResources)
@@ -374,15 +202,6 @@ namespace
                   << proj.project->getFile().getFullPathName() << std::endl;
 
         proj.save (justSaveResources);
-    }
-
-    //==============================================================================
-    static void getVersion (const StringArray& args)
-    {
-        checkArgumentCount (args, 2);
-        LoadedProject proj (args[1]);
-
-        std::cout << proj.project->getVersionString() << std::endl;
     }
 
     //==============================================================================
@@ -481,7 +300,7 @@ namespace
         jassert (targetFolder.isDirectory());
 
         const File moduleFolderParent (moduleFolder.getParentDirectory());
-        LibraryModule module (moduleFolder);
+        LibraryModule module (moduleFolder.getChildFile (ModuleDescription::getManifestFileName()));
 
         if (! module.isValid())
             throw CommandLineError (moduleFolder.getFullPathName() + " is not a valid module folder!");
@@ -529,7 +348,7 @@ namespace
 
             while (i.next())
             {
-                LibraryModule module (i.getFile());
+                LibraryModule module (i.getFile().getChildFile (ModuleDescription::getManifestFileName()));
 
                 if (module.isValid())
                 {
@@ -565,7 +384,7 @@ namespace
         const String content (file.loadFileAsString());
 
         if (content.contains ("%%") && content.contains ("//["))
-            return; // ignore projucer GUI template files
+            return; // ignore introjucer GUI template files
 
         StringArray lines;
         lines.addLines (content);
@@ -730,76 +549,84 @@ namespace
     }
 
     //==============================================================================
-    static String getStringConcatenationExpression (Random& rng, int start, int length)
+
+    static void addExporterToProject (const StringArray& args )
     {
-        jassert (length > 0);
+        checkArgumentCount (args, 3);
 
-        if (length == 1)
-            return "s" + String (start);
+        String fileName = args[args.size()-1];
+        int added = 0;
 
-        int breakPos = jlimit (1, length - 1, (length / 3) + rng.nextInt (length / 3));
+        LoadedProject proj (fileName);
 
-        return "(" + getStringConcatenationExpression (rng, start, breakPos)
-                + " + " + getStringConcatenationExpression (rng, start + breakPos, length - breakPos) + ")";
-    }
+        for(int i = 1; i < args.size()-1; ++i) {
+          String exportName = args[i].unquoted();
 
-    static void generateObfuscatedStringCode (const StringArray& args)
-    {
-        checkArgumentCount (args, 2);
-        const String originalText (args[1]);
+          if(!ProjectExporter::getExporterNames().contains(exportName))
+            throw CommandLineError ("No such exporter: " +  exportName);
 
-        struct Section
-        {
-            String text;
-            int position, index;
-
-            void writeGenerator (MemoryOutputStream& out) const
-            {
-                String name ("s" + String (index));
-
-                out << "    String " << name << ";  " << name;
-
-                for (int i = 0; i < text.length(); ++i)
-                    out << " << '" << String::charToString (text[i]) << "'";
-
-                out << ";" << newLine;
-            }
-        };
-
-        Array<Section> sections;
-        String text = originalText;
-        Random rng;
-
-        while (text.isNotEmpty())
-        {
-            int pos = jmax (0, text.length() - (1 + rng.nextInt (6)));
-            Section s = { text.substring (pos), pos, 0 };
-            sections.insert (0, s);
-            text = text.substring (0, pos);
+          if(projectHasExporter(*proj.project, exportName)) {
+            std::cerr << "Already have an exporter: " << exportName << std::endl;
+          } else {
+            std::cerr << "Adding exporter: "  << exportName << std::endl;
+            proj.project->addNewExporter(exportName);
+            ++added;
+          }
         }
 
-        for (int i = 0; i < sections.size(); ++i)
-            sections.getReference(i).index = i;
+        if(added > 0) {
+          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
 
-        for (int i = 0; i < sections.size(); ++i)
-            sections.swap (i, rng.nextInt (sections.size()));
+					proj.save(false);
+				}
+    }
 
-        MemoryOutputStream out;
+    //==============================================================================
 
-        out << "String createString()" << newLine
-            << "{" << newLine;
+    static void getProjectExporters (const StringArray& args )
+    {
+        checkArgumentCount (args, 2);
 
-        for (int i = 0; i < sections.size(); ++i)
-            sections.getReference(i).writeGenerator (out);
+        LoadedProject proj (args[1]);
 
-        out << newLine
-            << "    String result = " << getStringConcatenationExpression (rng, 0, sections.size()) << ";" << newLine
-            << newLine
-            << "    jassert (result == " << originalText.quoted() << ");" << newLine
-            << "    return result;" << newLine
-            << "}" << newLine;
+        std::cerr << "Project " << proj.project->getFile().getFullPathName() << " exporters:" << std::endl;
 
-        std::cout << out.toString() << std::endl;
+        for (Project::ExporterIterator exporter (*proj.project); exporter.next(); ) {
+					std::cout << exporter->getName() << std::endl;
+        }
+    }
+    //==============================================================================
+
+    static void removeProjectExporter (const StringArray& args )
+    {
+        checkArgumentCount (args, 3);
+
+        String fileName = args[args.size()-1];
+        int remove = 0;
+
+        LoadedProject proj (fileName);
+
+        for(int i = 1; i < args.size()-1; ++i) {
+          String exportName = args[i].unquoted();
+
+					ValueTree* settings = getProjectExporter(*proj.project, exportName);
+
+					if(settings) {
+						ValueTree parent (settings->getParent());
+						parent.removeChild (*settings, nullptr);
+						remove++;
+					} else {
+        std::cerr << "No such exporter: " << exportName  << std::endl;
+					}
+        }
+
+				if(remove) {
+					//proj.project->exporters.removeChild(exportName);
+
+          std::cerr << "Re-saving file: " << proj.project->getFile().getFullPathName() << std::endl;
+
+					proj.save(false);
+				}
     }
 
     //==============================================================================
@@ -818,9 +645,6 @@ namespace
                   << std::endl
                   << " " << appName << " --resave-resources project_file" << std::endl
                   << "    Resaves just the binary resources for a project." << std::endl
-                  << std::endl
-                  << " " << appName << " --get-version project_file" << std::endl
-                  << "    Returns the version number of a project." << std::endl
                   << std::endl
                   << " " << appName << " --list-exporter-names" << std::endl
                   << "    Gets all available exporter types." << std::endl
@@ -865,9 +689,6 @@ namespace
                   << std::endl
                   << " " << appName << " --fix-broken-include-paths target_folder" << std::endl
                   << "    Scans the given folder for C/C++ source files (recursively). Where a file contains an #include of one of the other filenames, it changes it to use the optimum relative path. Helpful for auto-fixing includes when re-arranging files and folders in a project." << std::endl
-                  << std::endl
-                  << " " << appName << " --obfuscated-string-code string_to_obfuscate" << std::endl
-                  << "    Generates a C++ function which returns the given string, but in an obfuscated way." << std::endl
                   << std::endl;
     }
 }
@@ -887,7 +708,6 @@ int performCommandLine (const String& commandLine)
         if (matchArgument (command, "h"))                        { showHelp(); return 0; }
         if (matchArgument (command, "resave"))                   { resaveProject (args, false); return 0; }
         if (matchArgument (command, "resave-resources"))         { resaveProject (args, true); return 0; }
-        if (matchArgument (command, "get-version"))              { getVersion (args); return 0; }
         if (matchArgument (command, "set-version"))              { setVersion (args); return 0; }
         if (matchArgument (command, "bump-version"))             { bumpVersion (args); return 0; }
         if (matchArgument (command, "git-tag-version"))          { gitTag (args); return 0; }
@@ -898,11 +718,10 @@ int performCommandLine (const String& commandLine)
         if (matchArgument (command, "remove-tabs"))              { cleanWhitespace (args, true); return 0; }
         if (matchArgument (command, "tidy-divider-comments"))    { tidyDividerComments (args); return 0; }
         if (matchArgument (command, "fix-broken-include-paths")) { fixRelativeIncludePaths (args); return 0; }
-        if (matchArgument (command, "obfuscated-string-code"))   { generateObfuscatedStringCode (args); return 0; }
-        if (matchArgument (command, "list-exporter-names"))      { listExporterNames (); return 0; }
-        if (matchArgument (command, "get-exporters"))            { getProjectExporters (args); return 0; }
-        if (matchArgument (command, "add-exporter"))             { addExporterToProject (args); return 0; }
-        if (matchArgument (command, "remove-exporter"))         { removeProjectExporter (args); return 0; }
+				if (matchArgument (command, "list-exporter-names"))      { listExporterNames (); return 0; }
+				if (matchArgument (command, "get-exporters"))            { getProjectExporters (args); return 0; }
+				if (matchArgument (command, "add-exporter"))             { addExporterToProject (args); return 0; }
+				if (matchArgument (command, "remove-exporter"))         { removeProjectExporter (args); return 0; }
 
     }
     catch (const CommandLineError& error)
